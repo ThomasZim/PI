@@ -1,0 +1,6 @@
+#installation streamlit
+ 
+ 1. Installer pipenv : pip3 install pipenv
+ 2. Créer un environnement : python3 -m  pipenv shell
+ 3. Installer streamlit : pipenv install streamlit
+ 4. Lancer streamlit : streamlit run code.py
