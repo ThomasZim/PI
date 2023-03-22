@@ -26,39 +26,27 @@ import pyproj
 # st.plotly_chart(fig)
 
 # lire le fichier csv
-df = pd.read_csv("../../../Data/ElectricityProductionPlant.csv", sep=",")
+df_plants = pd.read_csv('../../../Data/ElectricityProductionPlant.csv', sep=',')
 
-# extraire les colonnes x et y
-x = df["x"]
-y = df["y"]
+# Remove all the rows that have a NaN value
+df_plants = df_plants.dropna()
 
-# définir le système de coordonnées d'origine (Swissgrid)
-crs_swissgrid = pyproj.CRS.from_epsg(21781)
+# Open cords_WGS84.csv
+df_cords_WGS84 = pd.read_csv('../../../Data/cords_WGS84.csv', sep=',')
 
-# définir le système de coordonnées de destination (WGS84)
-crs_wgs84 = pyproj.CRS.from_epsg(4326)
+# Add the coordinates to the original dataframe
+df_plants['y_WGS84'] = df_cords_WGS84['lat']
+df_plants['x_WGS84'] = df_cords_WGS84['lon']
 
-# créer un transformateur de coordonnées de Swissgrid à WGS84
-transformer = pyproj.Transformer.from_crs(crs_swissgrid, crs_wgs84, always_xy=True)
-
-# appliquer la transformation de coordonnées à tous les points
-lon, lat = transformer.transform(x.values, y.values)
-
-# ajouter les coordonnées géographiques au DataFrame
-df["latitude"] = lat
-df["longitude"] = lon
 
 # afficher les colonnes de latitude et longitude
-st.write(df[["latitude", "longitude"]])
+st.write(df_plants[["x_WGS84", "y_WGS84"]])
 
-# charger les données géographiques de la Suisse depuis geopandas
-world = gpd.read_file(gpd.datasets.get_path('naturalearth_lowres'))
-switzerland = world[world.name == 'Switzerland']
-print(switzerland)
+fig = px.scatter_mapbox(df_plants, lat="x_WGS84", lon="y_WGS84", hover_name="Municipality", zoom=7)
+fig.update_layout(mapbox_style="carto-positron",
+                  mapbox_center={"lat": 46.8182, "lon": 8.2275},
+                  mapbox_zoom=6)
 
-# créer la carte avec Plotly
-fig = px.choropleth_mapbox(switzerland, geojson=switzerland.geometry, hover_name='name',
-                           center={"lat": 46.8, "lon": 8.2}, mapbox_style="carto-positron", zoom=6)
 
-# afficher la carte dans l'interface Streamlit
+# # afficher la carte dans l'interface Streamlit
 st.plotly_chart(fig)
