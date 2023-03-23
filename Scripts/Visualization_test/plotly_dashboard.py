@@ -8,6 +8,33 @@ import plotly.express as px
 #Open dataset
 df = pd.read_csv('../../Data/ogd104_stromproduktion_swissgrid.csv', sep=',')
 
+# Open EletricityProductionPlant dataset
+df_plants = pd.read_csv('../../Data/ElectricityProductionPlant.csv', sep=',')
+
+# Remove all the rows that have a NaN value
+df_plants = df_plants.dropna()
+
+# Reindex the dataframe
+df_plants = df_plants.reset_index()
+
+# Open cords_WGS84.csv
+df_cords_WGS84 = pd.read_csv('../../Data/cords_WGS84.csv', sep=',')
+
+# Store the old column names of both dataframes
+cord_column_names = df_cords_WGS84.columns
+plants_column_names = df_plants.columns
+
+# Add the coordinates to the original dataframe ignoring the index
+df_plants = pd.concat([df_plants, df_cords_WGS84], axis=1, ignore_index=True)
+
+# Rename the columns of the new dataframe
+df_plants.columns = plants_column_names.append(cord_column_names)
+
+fig_ch = px.scatter_mapbox(df_plants, lat="lat", lon="lon", hover_name="Municipality", zoom=7)
+fig_ch.update_layout(mapbox_style="carto-positron",
+                  mapbox_center={"lat": 46.8182, "lon": 8.2275},
+                  mapbox_zoom=6)
+
 #Create a new dataframe for every different type of energy
 df_wind = df[df['Energietraeger'] == 'Wind']
 df_thermal = df[df['Energietraeger'] == 'Thermische']
@@ -68,6 +95,9 @@ app = dash.Dash(__name__)
 
 # Define the layout of the app
 app.layout = html.Div([
+    # Display the map
+    dcc.Graph(id='graph_ch', figure=fig_ch),
+
     # Display the wind dataframe
     dcc.Graph(id='graph_wind', figure=fig_wind),
 
