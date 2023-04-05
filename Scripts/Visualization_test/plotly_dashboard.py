@@ -30,7 +30,7 @@ df_plants = pd.concat([df_plants, df_cords_WGS84], axis=1, ignore_index=True)
 # Rename the columns of the new dataframe
 df_plants.columns = plants_column_names.append(cord_column_names)
 
-fig_ch = px.scatter_mapbox(df_plants, lat="lat", lon="lon", hover_name="Municipality", zoom=7)
+fig_ch = px.scatter_mapbox(df_plants, lat="lat", lon="lon", hover_name="Municipality",color="Canton", zoom=7)
 fig_ch.update_layout(mapbox_style="carto-positron",
                   mapbox_center={"lat": 46.8182, "lon": 8.2275},
                   mapbox_zoom=6)
@@ -88,6 +88,10 @@ fig_full = px.line(df_full, x='Datum', y='Produktion_GWh', color='Energietraeger
 fig_full.update_xaxes(title_text='Date')
 fig_full.update_yaxes(title_text='Production (GWh)')
 
+# Create the initial figure to display the selected data
+fig_selected_data = px.histogram(df_plants, x="Canton", title="Selected data")
+
+
 #Create a dataframe with 
 
 # Initialize the app
@@ -95,10 +99,24 @@ app = dash.Dash(__name__)
 
 # Define the layout of the app
 app.layout = html.Div([
-    # Display the map
-    dcc.Graph(id='graph_ch', figure=fig_ch),
-
-    # Display the wind dataframe
+    # Display the checkboxes
+    dcc.Checklist(
+        id="filter-canton",
+        options=[{'label': c, 'value': c} for c in df_plants['Canton'].unique()],
+        value=list(df_plants['Canton'].unique())
+    ),
+    # Display the figures side by side
+    html.Div([
+        # Display the map
+        dcc.Graph(id='graph_ch', figure=fig_ch)
+    ], style={'width': '50%', 'display': 'inline-block'}),
+    
+    html.Div([
+        # Display the wind dataframe
+        dcc.Graph(id='graph_selected_data', figure=fig_selected_data)
+    ], style={'width': '50%', 'display': 'inline-block'}),
+    
+    # # Display the wind dataframe
     dcc.Graph(id='graph_wind', figure=fig_wind),
 
     # Display the thermal dataframe
@@ -119,6 +137,31 @@ app.layout = html.Div([
     # Display the full dataframe
     dcc.Graph(id='graph_full', figure = fig_full)
 ])
+
+## Define the callback function
+@app.callback(
+    [dash.dependencies.Output('graph_ch', 'figure'), dash.dependencies.Output('graph_selected_data', 'figure')],
+    [dash.dependencies.Input('filter-canton', 'value')],
+    prevent_initial_call=True
+)
+def update_figures(selected_cantons):
+    # Filter the data by the selected cantons
+    filtered_data = df_plants[df_plants['Canton'].isin(selected_cantons)]
+
+
+    # Update the map with the filtered data
+    fig_ch_filtered = px.scatter_mapbox(filtered_data, lat="lat", lon="lon", hover_name="Municipality",color="Canton", zoom=7)
+    fig_ch_filtered.update_layout(mapbox_style="carto-positron",
+                  mapbox_center={"lat": 46.8182, "lon": 8.2275},
+                  mapbox_zoom=6)
+
+    # Update the figure to display the selected data
+    fig_selected_data = px.histogram(filtered_data, x="Canton", title="Selected data")
+
+    # Return the updated figures
+    return fig_ch_filtered, fig_selected_data
+
+
 
 # Run the app
 if __name__ == '__main__':
