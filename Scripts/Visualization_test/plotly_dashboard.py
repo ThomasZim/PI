@@ -88,6 +88,14 @@ fig_full = px.line(df_full, x='Datum', y='Produktion_GWh', color='Energietraeger
 fig_full.update_xaxes(title_text='Date')
 fig_full.update_yaxes(title_text='Production (GWh)')
 
+# Création des options de filtre
+# Define the options for the checkboxes
+checkbox_options = [{'label': 'Map', 'value': 'show_map'},
+                    {'label': 'Wind Production', 'value': 'show_wind'}]
+
+# Define the initial values for the checkboxes
+initial_checkboxes = ['show_map', 'show_wind']
+
 #Create a dataframe with 
 
 # Initialize the app
@@ -95,11 +103,28 @@ app = dash.Dash(__name__)
 
 # Define the layout of the app
 app.layout = html.Div([
+    # Display the checkboxes
+    dcc.Checklist(
+        id='checkboxes',
+        options=checkbox_options,
+        value=initial_checkboxes
+    ),
+    # Display the figures side by side
+    html.Div([
+        # Display the map
+        dcc.Graph(id='graph_ch', figure=fig_ch)
+    ], style={'width': '50%', 'display': 'inline-block'}),
+    
+    html.Div([
+        # Display the wind dataframe
+        dcc.Graph(id='graph_wind', figure=fig_wind)
+    ], style={'width': '50%', 'display': 'inline-block'}),
+    
     # Display the map
-    dcc.Graph(id='graph_ch', figure=fig_ch),
+    # dcc.Graph(id='graph_ch', figure=fig_ch),
 
-    # Display the wind dataframe
-    dcc.Graph(id='graph_wind', figure=fig_wind),
+    # # Display the wind dataframe
+    # dcc.Graph(id='graph_wind', figure=fig_wind),
 
     # Display the thermal dataframe
     dcc.Graph(id='graph_thermal', figure=fig_thermal),
@@ -119,6 +144,22 @@ app.layout = html.Div([
     # Display the full dataframe
     dcc.Graph(id='graph_full', figure = fig_full)
 ])
+
+# Define the callbacks for the checkboxes
+@app.callback(
+    [dash.dependencies.Output('graph_ch', 'style'),
+     dash.dependencies.Output('graph_wind', 'style')],
+    [dash.dependencies.Input('checkboxes', 'value')]
+)
+def display_figures(checkbox_values):
+    show_map = 'show_map' in checkbox_values
+    show_wind = 'show_wind' in checkbox_values
+    
+    style_map = {'display': 'none'} if not show_map else {}
+    style_wind = {'display': 'none'} if not show_wind else {}
+    
+    return style_map, style_wind
+
 
 # Run the app
 if __name__ == '__main__':

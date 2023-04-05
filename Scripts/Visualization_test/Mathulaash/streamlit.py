@@ -4,6 +4,9 @@ import matplotlib.pyplot as plt
 import plotly.express as px
 import geopandas as gpd
 import pyproj
+import dash
+from dash import dcc
+from dash  import html
 
 # df =  pd.read_csv("/home/mathu/Documents/pi/PI/Data/ogd104_stromproduktion_swissgrid.csv")
 # dates = sorted(df["Datum"].unique())
@@ -50,3 +53,19 @@ fig.update_layout(mapbox_style="carto-positron",
 
 # # afficher la carte dans l'interface Streamlit
 st.plotly_chart(fig)
+app = dash.Dash(__name__)
+app.layout = html.Div([
+    html.Div([
+        html.Div([
+            dcc.Graph(figure=fig)
+        ], className="col-md-6"),
+
+        html.Div([
+            dcc.Graph(figure=fig_map)
+        ], className="col-md-6"),
+
+    ], className="row")
+])
+
+if __name__ == '__main__':
+    app.run_server(debug=True)
