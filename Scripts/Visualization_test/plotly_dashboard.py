@@ -89,7 +89,7 @@ fig_full.update_xaxes(title_text='Date')
 fig_full.update_yaxes(title_text='Production (GWh)')
 
 # Create the initial figure to display the selected data
-fig_selected_data = px.histogram(df_plants, x="Canton", title="Selected data")
+fig_selected_data = px.histogram(df_plants, x="Canton", title="Selected data",color='Canton')
 
 
 #Create a dataframe with 
@@ -146,8 +146,8 @@ app.layout = html.Div([
 )
 def update_figures(selected_cantons):
     # Filter the data by the selected cantons
+    
     filtered_data = df_plants[df_plants['Canton'].isin(selected_cantons)]
-
 
     # Update the map with the filtered data
     fig_ch_filtered = px.scatter_mapbox(filtered_data, lat="lat", lon="lon", hover_name="Municipality",color="Canton", zoom=7)
@@ -156,10 +156,10 @@ def update_figures(selected_cantons):
                   mapbox_zoom=6)
 
     # Update the figure to display the selected data
-    fig_selected_data = px.histogram(filtered_data, x="Canton", title="Selected data")
+    fig_filtered_data = px.histogram(filtered_data, x="Canton", title="Selected data")
 
     # Return the updated figures
-    return fig_ch_filtered, fig_selected_data
+    return fig_ch_filtered, fig_filtered_data
 
 
 
