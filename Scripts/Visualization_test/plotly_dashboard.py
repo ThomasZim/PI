@@ -2,7 +2,7 @@ import dash
 from dash import dcc
 from dash  import html
 import pandas as pd
-import matplotlib as plty
+#import matplotlib as plty
 import plotly.express as px
 
 #Open dataset
@@ -102,41 +102,26 @@ app = dash.Dash(__name__)
 
 # Define the layout of the app
 app.layout = html.Div([
-    # # Display the checkboxes
-    # dcc.Checklist(
-    #     id="filter-canton",
-    #     options=[{'label': c, 'value': c} for c in df_plants['Canton'].unique()],
-    #     value=list(df_plants['Canton'].unique())
-    # ),
-    # # Display the figures side by side
-    # html.Div([
-    #     # Display the map
-    #     dcc.Graph(id='graph_ch', figure=fig_ch)
-    # ], style={'width': '50%', 'display': 'inline-block'}),
+    # Display the checkboxes
+    dcc.Checklist(
+        id="filter-canton",
+        options=[{'label': c, 'value': c} for c in df_plants['Canton'].unique()],
+        inline=True,
+        value=list(df_plants['Canton'].unique())
+    ),
+    # Display the figures side by side
+    html.Div([
+        # Display the map
+        dcc.Graph(id='graph_ch', figure=fig_ch)
+    ], style={'width': '50%', 'display': 'inline-block'}),
     
-    # html.Div([
-    #     # Display the wind dataframe
-    #     dcc.Graph(id='graph_selected_data', figure=fig_selected_data)
-    # ], style={'width': '50%', 'display': 'inline-block'}),
+    html.Div([
+        # Display the selected data
+        dcc.Graph(id='graph_selected_data', figure=fig_selected_data)
+    ], style={'width': '50%', 'display': 'inline-block'}),
     
-    html.Div(children=[
-        # graphique 1
-        dcc.Graph(
-            id='graph1',
-            figure=fig_production,
-            style={'display': 'block'}
-        ),
-        # graphique 2
-        dcc.Graph(
-            id='graph2',
-            figure=fig_consumption,
-            style={'display': 'none'}
-        ),
-        # bouton pour switcher les graphiques
-        html.Button('Switch', id='switch-button')
-    ]),
     # # Display the wind dataframe
-    dcc.Graph(id='graph_wind', figure=fig_wind),
+    dcc.Graph(id='graph_wind', figure=fig_wind,style={'display': 'block'}),
 
     # Display the thermal dataframe
     dcc.Graph(id='graph_thermal', figure=fig_thermal),
@@ -154,42 +139,59 @@ app.layout = html.Div([
     dcc.Graph(id='graph_flow', figure=fig_flow),
 
     # Display the full dataframe
-    dcc.Graph(id='graph_full', figure = fig_full)
+    dcc.Graph(id='graph_full', figure = fig_full),
+    
+    html.Div([
+        # graphique 1
+        dcc.Graph(
+            id='graph1',
+            figure=fig_production,
+            style={'display': 'block'}
+        ),
+        # graphique 2
+        dcc.Graph(
+            id='graph2',
+            figure=fig_consumption,
+            style={'display': 'none'}
+        ),
+        # bouton pour switcher les graphiques
+        html.Button('Switch', id='switch-button')
+    ])
 ])
 
-## Define the callback function
-# @app.callback(
-#     [dash.dependencies.Output('graph_ch', 'figure'), dash.dependencies.Output('graph_selected_data', 'figure')],
-#     [dash.dependencies.Input('filter-canton', 'value')],
-#     prevent_initial_call=True
-# )
-# def update_figures(selected_cantons):
-#     # Filter the data by the selected cantons
+# Define the callback function
+@app.callback(
+    [dash.dependencies.Output('graph_ch', 'figure'), dash.dependencies.Output('graph_selected_data', 'figure')],
+    [dash.dependencies.Input('filter-canton', 'value')],
+    prevent_initial_call=True
+)
+def update_figures(selected_cantons):
+    # Filter the data by the selected cantons
     
-#     filtered_data = df_plants[df_plants['Canton'].isin(selected_cantons)]
+    filtered_data = df_plants[df_plants['Canton'].isin(selected_cantons)]
 
-#     # Update the map with the filtered data
-#     fig_ch_filtered = px.scatter_mapbox(filtered_data, lat="lat", lon="lon", hover_name="Municipality",color="Canton", zoom=7)
-#     fig_ch_filtered.update_layout(mapbox_style="carto-positron",
-#                   mapbox_center={"lat": 46.8182, "lon": 8.2275},
-#                   mapbox_zoom=6)
+    # Update the map with the filtered data
+    fig_ch_filtered = px.scatter_mapbox(filtered_data, lat="lat", lon="lon", hover_name="Municipality",color="Canton", zoom=7)
+    fig_ch_filtered.update_layout(mapbox_style="carto-positron",
+                  mapbox_center={"lat": 46.8182, "lon": 8.2275},
+                  mapbox_zoom=6)
 
-#     # Update the figure to display the selected data
-#     fig_filtered_data = px.histogram(filtered_data, x="Canton", title="Selected data")
+    # Update the figure to display the selected data
+    fig_filtered_data = px.histogram(filtered_data, x="Canton", title="Selected data",color='Canton')
 
-#     # Return the updated figures
-#     return fig_ch_filtered, fig_filtered_data
+    # Return the updated figures
+    return fig_ch_filtered, fig_filtered_data
 
 # callback pour switcher les graphiques
 @app.callback(
-    dash.dependencies.Output('graph1', 'style'),
-    dash.dependencies.Output('graph2', 'style'),
-    dash.dependencies.Input('switch-button', 'n_clicks')
+    [dash.dependencies.Output('graph1', 'style'),
+    dash.dependencies.Output('graph2', 'style')],
+    [dash.dependencies.Input('switch-button', 'n_clicks')]
 )
 def switch_graphs(n_clicks):
     if n_clicks is None:
         return {'display': 'block'}, {'display': 'none'}
-    elif n_clicks % 2 == 1:
+    if n_clicks % 2 == 1:
         return {'display': 'block'}, {'display': 'none'}
     else:
         return {'display': 'none'}, {'display': 'block'}
