@@ -91,8 +91,8 @@ fig_full.update_yaxes(title_text='Production (GWh)')
 # Create the initial figure to display the selected data
 fig_selected_data = px.histogram(df_plants, x="Canton", title="Selected data",color='Canton')
 
-fig_production = px.line(df_1hour, x="Date", y="Production", color='Canton')
-fig_consumption = px.line(df_1hour, x="Date", y="Consumption", color='Canton')
+fig_production = px.area(df_1hour, x="Date", y="Production", color='Canton')
+fig_consumption = px.area(df_1hour, x="Date", y="Consumption", color='Canton')
 
 
 #Create a dataframe with 
