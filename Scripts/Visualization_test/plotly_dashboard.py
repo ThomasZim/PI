@@ -111,7 +111,7 @@ app.layout = html.Div([
     # Display the checkboxes
     dcc.Dropdown(
         id="filter-canton",
-        options=[{'label': c, 'value': c} for c in df_plants['Canton'].unique()],
+        options=[{'label': c, 'value': c} for c in df_plants['Canton'].unique()] + [{'label': 'Tous les cantons', 'value': 'all'}],
         multi=False,
         value="AG",
         style={'width': '50%'}
@@ -148,6 +148,13 @@ app.layout = html.Div([
     # Display the full dataframe
     dcc.Graph(id='graph_full', figure = fig_full),
     
+    dcc.Dropdown(
+        id="filter-canton_graph",
+        options=[{'label': c, 'value': c} for c in df_1hour['Canton'].unique()] + [{'label': 'Tous les cantons', 'value': 'all'}],
+        multi=False,
+        value="AG",
+        style={'width': '50%'}
+    ),
     html.Div([
         # graphique 1
         dcc.Graph(
@@ -173,8 +180,13 @@ app.layout = html.Div([
 )
 def update_figures(selected_cantons):
     # Filter the data by the selected cantons
-    
-    filtered_data = df_plants.loc[df_plants['Canton']==selected_cantons]
+    if selected_cantons == "all" or selected_cantons == None:
+        filtered_data = df_plants# Update the figure to display the selected data
+        fig_filtered_data = px.area(df_all_cantons,x='BeginningOfOperation', y='CumulativePower', title='Installed production', color='MainCategory', line_group='MainCategory')      
+    else:
+        filtered_data = df_plants.loc[df_plants['Canton']==selected_cantons]
+        # Update the figure to display the selected data
+        fig_filtered_data = px.area(df_canton_final[selected_cantons],x='BeginningOfOperation', y='CumulativePower', title='Installed production ' + selected_cantons, color='MainCategory', line_group='MainCategory')
 
     # Update the map with the filtered data
     fig_ch_filtered = px.scatter_mapbox(filtered_data, lat="lat", lon="lon", hover_name="Municipality", zoom=7,color="MainCategory")
@@ -182,9 +194,7 @@ def update_figures(selected_cantons):
                   mapbox_center={"lat": 46.8182, "lon": 8.2275},
                   mapbox_zoom=6)
 
-    # Update the figure to display the selected data
-    fig_filtered_data = px.area(df_canton_final[selected_cantons],x='BeginningOfOperation', y='CumulativePower', title='Installed production ' + selected_cantons, color='MainCategory', line_group='MainCategory')
-
+    
     # Return the updated figures
     return fig_ch_filtered, fig_filtered_data
 
@@ -202,6 +212,25 @@ def switch_graphs(n_clicks):
     else:
         return {'display': 'none'}, {'display': 'block'}
 
+@app.callback(
+    [dash.dependencies.Output('graph1', 'figure'), dash.dependencies.Output('graph2', 'figure')],
+    [dash.dependencies.Input('filter-canton_graph', 'value')],
+)
+def update_figures(selected_cantons):
+    # Filter the data by the selected cantons
+    if selected_cantons == "all" or selected_cantons == None:
+        filtered_data = df_1hour# Update the figure to display the selected data
+        fig1_filtered_data = px.area(df_1hour, x="Date", y="Production", color='Canton')
+        fig2_filtered_data = px.area(df_1hour, x="Date", y="Consumption", color='Canton')
+    else:
+        filtered_data = df_1hour.loc[df_1hour['Canton']==selected_cantons]
+        # Update the figure to display the selected data
+        fig1_filtered_data = px.area(filtered_data, x="Date", y="Production")
+        fig2_filtered_data = px.area(filtered_data, x="Date", y="Consumption")
+
+    
+    # Return the updated figures
+    return fig1_filtered_data,fig2_filtered_data
 # Run the app
 if __name__ == '__main__':
     app.run_server(debug=True)
