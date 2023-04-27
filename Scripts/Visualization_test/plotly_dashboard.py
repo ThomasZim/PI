@@ -10,6 +10,7 @@ df = pd.read_csv('../../Data/ogd104_stromproduktion_swissgrid.csv', sep=',')
 
 # Open EletricityProductionPlant dataset
 df_plants = pd.read_csv('../../Data/ElectricityProductionPlant.csv', sep=',')
+df_plants['MainCategory'] = df_plants['MainCategory'].replace(['maincat_1', 'maincat_2', 'maincat_3', 'maincat_4'], ['Energie hydraulique', 'Autres énergies renouvelables', 'Energie nucléaire', 'Energie fossile'])
 df_1hour = pd.read_csv('../../Data/1hour_concat.csv', sep=',')
 df_all_cantons = pd.read_csv('../../Data/all_cantons_installed_production.csv')
 df_all_cantons['MainCategory'] = df_all_cantons['MainCategory'].replace(['maincat_1', 'maincat_2', 'maincat_3', 'maincat_4'], ['Energie hydraulique', 'Autres énergies renouvelables', 'Energie nucléaire', 'Energie fossile'])
@@ -112,7 +113,7 @@ app.layout = html.Div([
         id="filter-canton",
         options=[{'label': c, 'value': c} for c in df_plants['Canton'].unique()],
         multi=False,
-        value=list(df_plants['Canton'].unique()),
+        value="AG",
         style={'width': '50%'}
     ),
     # Display the figures side by side
@@ -169,7 +170,6 @@ app.layout = html.Div([
 @app.callback(
     [dash.dependencies.Output('graph_ch', 'figure'), dash.dependencies.Output('graph_selected_data', 'figure')],
     [dash.dependencies.Input('filter-canton', 'value')],
-    prevent_initial_call=True
 )
 def update_figures(selected_cantons):
     # Filter the data by the selected cantons
@@ -177,7 +177,7 @@ def update_figures(selected_cantons):
     filtered_data = df_plants.loc[df_plants['Canton']==selected_cantons]
 
     # Update the map with the filtered data
-    fig_ch_filtered = px.scatter_mapbox(filtered_data, lat="lat", lon="lon", hover_name="Municipality", zoom=7)
+    fig_ch_filtered = px.scatter_mapbox(filtered_data, lat="lat", lon="lon", hover_name="Municipality", zoom=7,color="MainCategory")
     fig_ch_filtered.update_layout(mapbox_style="carto-positron",
                   mapbox_center={"lat": 46.8182, "lon": 8.2275},
                   mapbox_zoom=6)
