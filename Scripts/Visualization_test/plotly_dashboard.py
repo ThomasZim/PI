@@ -11,6 +11,10 @@ df = pd.read_csv('../../Data/ogd104_stromproduktion_swissgrid.csv', sep=',')
 # Open EletricityProductionPlant dataset
 df_plants = pd.read_csv('../../Data/ElectricityProductionPlant.csv', sep=',')
 df_1hour = pd.read_csv('../../Data/1hour_concat.csv', sep=',')
+df_all_cantons = pd.read_csv('../../Data/all_cantons_installed_production.csv')
+df_canton_final = {}
+for canton in df_plants['Canton'].unique():
+    df_canton_final[canton] = df_all_cantons[df_all_cantons['Canton'] == canton]
 # Remove all the rows that have a NaN value
 df_plants = df_plants.dropna()
 
@@ -30,7 +34,7 @@ df_plants = pd.concat([df_plants, df_cords_WGS84], axis=1, ignore_index=True)
 # Rename the columns of the new dataframe
 df_plants.columns = plants_column_names.append(cord_column_names)
 
-fig_ch = px.scatter_mapbox(df_plants, lat="lat", lon="lon", hover_name="Municipality",color="Canton", zoom=7)
+fig_ch = px.scatter_mapbox(df_plants, lat="lat", lon="lon", hover_name="Municipality", zoom=7)
 fig_ch.update_layout(mapbox_style="carto-positron",
                   mapbox_center={"lat": 46.8182, "lon": 8.2275},
                   mapbox_zoom=6)
@@ -89,7 +93,7 @@ fig_full.update_xaxes(title_text='Date')
 fig_full.update_yaxes(title_text='Production (GWh)')
 
 # Create the initial figure to display the selected data
-fig_selected_data = px.histogram(df_plants, x="Canton", title="Selected data",color='Canton')
+fig_selected_data = px.area(df_canton_final["AG"],x='BeginningOfOperation', y='CumulativePower', title='Installed production', color='MainCategory', line_group='MainCategory')
 
 fig_production = px.area(df_1hour, x="Date", y="Production", color='Canton')
 fig_consumption = px.area(df_1hour, x="Date", y="Consumption", color='Canton')
@@ -103,11 +107,12 @@ app = dash.Dash(__name__)
 # Define the layout of the app
 app.layout = html.Div([
     # Display the checkboxes
-    dcc.Checklist(
+    dcc.Dropdown(
         id="filter-canton",
         options=[{'label': c, 'value': c} for c in df_plants['Canton'].unique()],
-        inline=True,
-        value=list(df_plants['Canton'].unique())
+        multi=False,
+        value=list(df_plants['Canton'].unique()),
+        style={'width': '50%'}
     ),
     # Display the figures side by side
     html.Div([
@@ -168,16 +173,16 @@ app.layout = html.Div([
 def update_figures(selected_cantons):
     # Filter the data by the selected cantons
     
-    filtered_data = df_plants[df_plants['Canton'].isin(selected_cantons)]
+    filtered_data = df_plants.loc[df_plants['Canton']==selected_cantons]
 
     # Update the map with the filtered data
-    fig_ch_filtered = px.scatter_mapbox(filtered_data, lat="lat", lon="lon", hover_name="Municipality",color="Canton", zoom=7)
+    fig_ch_filtered = px.scatter_mapbox(filtered_data, lat="lat", lon="lon", hover_name="Municipality", zoom=7)
     fig_ch_filtered.update_layout(mapbox_style="carto-positron",
                   mapbox_center={"lat": 46.8182, "lon": 8.2275},
                   mapbox_zoom=6)
 
     # Update the figure to display the selected data
-    fig_filtered_data = px.histogram(filtered_data, x="Canton", title="Selected data",color='Canton')
+    fig_filtered_data = px.area(df_canton_final[selected_cantons],x='BeginningOfOperation', y='CumulativePower', title='Installed production ' + selected_cantons, color='MainCategory', line_group='MainCategory')
 
     # Return the updated figures
     return fig_ch_filtered, fig_filtered_data
