@@ -12,6 +12,7 @@ df = pd.read_csv('../../Data/ogd104_stromproduktion_swissgrid.csv', sep=',')
 df_plants = pd.read_csv('../../Data/ElectricityProductionPlant.csv', sep=',')
 df_1hour = pd.read_csv('../../Data/1hour_concat.csv', sep=',')
 df_all_cantons = pd.read_csv('../../Data/all_cantons_installed_production.csv')
+df_all_cantons['MainCategory'] = df_all_cantons['MainCategory'].replace(['maincat_1', 'maincat_2', 'maincat_3', 'maincat_4'], ['Energie hydraulique', 'Autres énergies renouvelables', 'Energie nucléaire', 'Energie fossile'])
 df_canton_final = {}
 for canton in df_plants['Canton'].unique():
     df_canton_final[canton] = df_all_cantons[df_all_cantons['Canton'] == canton]
