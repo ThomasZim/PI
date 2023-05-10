@@ -166,8 +166,9 @@ app.layout = html.Div([
     ),
     dcc.Dropdown(
         id="filter-canton_graph",
-        options=[{'label': c, 'value': c} for c in df_1hour['Canton'].unique(
-        )] + [{'label': 'ALL', 'value': 'all'}],
+        options=[{'label': c, 'value': c} for c in set(df_1hour['Canton'].unique()).union(
+            df_plants['Canton'].unique())] + [{'label': 'ALL', 'value': 'all'}],
+
         multi=False,
         value="AG",
         style={'width': '50%'}
@@ -211,7 +212,11 @@ app.layout = html.Div([
      dash.dependencies.Input('date-picker-range', 'end_date'), dash.dependencies.Input('toggle-button', 'n_clicks')]
 )
 def update_figures(selected_cantons, start_date, end_date, n_clicks):
-
+    filter_all = df_pc[(df_pc['Date'] >= start_date) &
+                       (df_pc['Date'] <= end_date)]
+    filter_canton = df_pc[(df_pc['Canton'] == selected_cantons) &
+                          (df_pc['Date'] >= start_date) &
+                          (df_pc['Date'] <= end_date)]
     # Filter the data by the selected cantons
     if selected_cantons == "all" or selected_cantons == None:
 
@@ -221,8 +226,7 @@ def update_figures(selected_cantons, start_date, end_date, n_clicks):
                                       title='Total Installed production', color='MainCategory', line_group='MainCategory')
 
         # Prod + Cons
-        filtered_data = df_pc[(df_pc['Date'] >= start_date) &
-                              (df_pc['Date'] <= end_date)]
+        filtered_data = filter_all
         fig_prod_cons = px.line(filtered_data, x='Date', y=[
                                 'Production', 'Consumption'], title='Total Production and Consumption')
 
@@ -231,9 +235,7 @@ def update_figures(selected_cantons, start_date, end_date, n_clicks):
         fig_installed_power = px.area(df_installed_CH, x='BeginningOfOperation', y='CumulativePower',
                                       title='Total Installed production', color='MainCategory', line_group='MainCategory')
 
-        filtered_data = df_pc[(df_pc['Canton'] == selected_cantons) &
-                              (df_pc['Date'] >= start_date) &
-                              (df_pc['Date'] <= end_date)]
+        filtered_data = filter_canton
         fig_prod_cons = px.line(filtered_data, x='Date', y=[
                                 'Production', 'Consumption'], title='Production and Consumption ' + selected_cantons)
     else:
@@ -251,18 +253,13 @@ def update_figures(selected_cantons, start_date, end_date, n_clicks):
                               "lat": 46.8182, "lon": 8.2275},
                           mapbox_zoom=6)
 
-        filtered_data = df_pc[(df_pc['Canton'] == selected_cantons) &
-                              (df_pc['Date'] >= start_date) &
-                              (df_pc['Date'] <= end_date)]
+        filtered_data = filter_canton
         fig_prod_cons = px.line(filtered_data, x='Date', y=[
                                 'Production', 'Consumption'], title='Production and Consumption ' + selected_cantons)
     # Vérifier si le bouton "Toggle Prod-Cons Trace" a été cliqué
     if n_clicks % 2 == 1 and selected_cantons != "all":
         # Filtrer les données en fonction du canton et de la date sélectionnés
-        filtered_data = df_pc[(df_pc['Canton'] == selected_cantons) &
-                              (df_pc['Date'] >= start_date) &
-                              (df_pc['Date'] <= end_date)]
-
+        filtered_data = filter_canton
         # Ajouter une colonne contenant la somme des productions et des consommations
         filtered_data['ProdConsSum'] = filtered_data['Production'] + \
             filtered_data['Consumption']
@@ -275,8 +272,7 @@ def update_figures(selected_cantons, start_date, end_date, n_clicks):
         fig_prod_cons.update_traces(
             line=dict(dash='dash', width=2.5), selector=dict(name='ProdConsSum'))
     elif n_clicks % 2 == 1 and selected_cantons == "all":
-        filtered_data = df_pc[(df_pc['Date'] >= start_date) &
-                              (df_pc['Date'] <= end_date)]
+        filtered_data = filter_all
         filtered_data['ProdConsSum'] = filtered_data['Production'] + \
             filtered_data['Consumption']
         fig_prod_cons = px.line(filtered_data, x='Date', y=[
