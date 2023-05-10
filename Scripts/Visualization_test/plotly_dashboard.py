@@ -19,6 +19,20 @@ df_1hour = pd.read_csv('../../Data/1hour_concat.csv', sep=',')
 # Convertir les dates de type string en type datetime
 df_1hour['Date'] = pd.to_datetime(df_1hour['Date'])
 
+df_pc = df_1hour
+df_pc = df_pc.sort_values(by=['Date', 'Canton'])
+df_pc = df_pc.reset_index(drop=True)
+#Multiply consumption by -1 to get a negative value
+df_pc['Consumption'] = df_pc['Consumption'] * -1
+
+#Remove the rows with a production or consumption value of 0
+df_pc = df_pc[df_pc.Production != 0]
+df_pc = df_pc[df_pc.Consumption != 0]
+#reindex the dataframe
+df_pc = df_pc.reset_index(drop=True)
+
+df_installed_cantons = pd.read_csv('../../Data/all_cantons_installed_production_with_CH.csv', sep=',')
+df_installed_CH = df_installed_cantons[df_installed_cantons['Canton'] == 'CH']
 df_all_cantons = pd.read_csv('../../Data/all_cantons_installed_production.csv')
 df_all_cantons['MainCategory'] = df_all_cantons['MainCategory'].replace(['maincat_1', 'maincat_2', 'maincat_3', 'maincat_4'], [
                                                                         'Energie hydraulique', 'Autres énergies renouvelables', 'Energie nucléaire', 'Energie fossile'])
@@ -100,6 +114,37 @@ fig_nuclear = px.line(df_nuclear, x='Datum', y='Produktion_GWh',
 fig_nuclear.update_xaxes(title_text='Date')
 fig_nuclear.update_yaxes(title_text='Production (GWh)')
 
+# Créez une liste d'options pour le menu déroulant
+graph_options = [
+    {'label': 'Wind', 'value': 'graph_wind'},
+    {'label': 'Thermal', 'value': 'graph_thermal'},
+    {'label': 'Storage', 'value': 'graph_storage'},
+    {'label': 'Photovoltaic', 'value': 'graph_photovoltaic'},
+    {'label': 'Nuclear', 'value': 'graph_nuclear'},
+    {'label': 'Flow', 'value': 'graph_flow'},
+    {'label': 'Full', 'value': 'graph_full'}
+]
+colors = {
+    'AG': 'rgb(255, 127, 14)',
+    'AI/AR': 'rgb(44, 160, 44)',
+    'BE/JU': 'rgb(31, 119, 180)',
+    'BL/BS': 'rgb(214, 39, 40)',
+    'FR': 'rgb(148, 103, 189)',
+    'GE/VD': 'rgb(140, 86, 75)',
+    'GL': 'rgb(227, 119, 194)',
+    'GR': 'rgb(127, 127, 127)',
+    'LU': 'rgb(188, 189, 34)',
+    'NE': 'rgb(23, 190, 207)',
+    'OW/NW/UR': 'rgb(174, 199, 232)',
+    'SG': 'rgb(255, 187, 120)',
+    'SH/ZH': 'rgb(152, 223, 138)',
+    'SO': 'rgb(255, 152, 150)',
+    'SZ/ZG': 'rgb(197, 176, 213)',
+    'TG': 'rgb(196, 156, 148)',
+    'TI': 'rgb(247, 182, 210)',
+    'VS': 'rgb(199, 199, 199)'
+}
+
 fig_flow = px.line(df_flow, x='Datum', y='Produktion_GWh',
                    title='Flow Production in Switzerland')
 fig_flow.update_xaxes(title_text='Date')
@@ -119,6 +164,7 @@ fig_selected_data = px.area(df_canton_final["AG"], x='BeginningOfOperation', y='
 fig_production = px.area(df_1hour, x="Date", y="Production", color='Canton')
 fig_consumption = px.area(df_1hour, x="Date", y="Consumption", color='Canton')
 
+fig_prod_cons = px.line(df_pc, x='Date', y=['Production', 'Consumption'], title='Production and Consumption')
 
 
 # Create a dataframe with
@@ -155,96 +201,55 @@ app.layout = html.Div([
         dcc.Graph(id='graph_selected_data', figure=fig_selected_data)
     ], style={'width': '50%', 'display': 'inline-block'}),
 
-    # # # Display the wind dataframe
-    # dcc.Graph(id='graph_wind', figure=fig_wind,style={'display': 'block'}),
-
-    # # Display the thermal dataframe
-    # dcc.Graph(id='graph_thermal', figure=fig_thermal),
-
-    # # Display the storage dataframe
-    # dcc.Graph(id='graph_storage', figure=fig_storage),
-
-    # # Display the photovoltaic dataframe
-    # dcc.Graph(id='graph_photovoltaic', figure=fig_photovoltaic),
-
-    # # Display the nuclear dataframe
-    # dcc.Graph(id='graph_nuclear', figure=fig_nuclear),
-
-    # # Display the flow dataframe
-    # dcc.Graph(id='graph_flow', figure=fig_flow),
-
-    # # Display the full dataframe
-    # dcc.Graph(id='graph_full', figure = fig_full),
-
     html.Div([
-        # graphique 1
-        dcc.Graph(
-            id='graph1',
-            figure=fig_production,
-            style={'display': 'block'}
+        dcc.Graph(id='graph_prod_cons',figure=fig_prod_cons),
+        html.Button('Toggle Prod-Cons Trace', id='toggle-button', n_clicks=0)
+    ]),
+    html.Div([
+        # Ajoutez le menu déroulant
+        dcc.Dropdown(
+            id='graph-dropdown',
+            options=graph_options,
+            value='graph_wind'
         ),
-        # graphique 2
-        dcc.Graph(
-            id='graph2',
-            figure=fig_consumption,
-            style={'display': 'none'}
-        ),
-        # bouton pour switcher les graphiques
-        html.Button('Switch', id='switch-button')
+        # Ajoutez le conteneur pour afficher les graphiques
+        html.Div(id='graph-container')
     ])
+
 ])
-
-# Switch entre les graph prod et conso
-@app.callback(
-    [dash.dependencies.Output('graph1', 'style'),
-     dash.dependencies.Output('graph2', 'style')],
-    [dash.dependencies.Input('switch-button', 'n_clicks')]
-)
-def switch_graphs(n_clicks):
-    if n_clicks is None:
-        return {'display': 'block'}, {'display': 'none'}
-    if n_clicks % 2 == 1:
-        return {'display': 'block'}, {'display': 'none'}
-    else:
-        return {'display': 'none'}, {'display': 'block'}
-
-
 
 # Mettre à jour les figures
 @app.callback(
     [dash.dependencies.Output('graph_ch', 'figure'), dash.dependencies.Output(
-        'graph_selected_data', 'figure'), dash.dependencies.Output('graph1', 'figure'),
-     dash.dependencies.Output('graph2', 'figure')],
+        'graph_selected_data', 'figure'),dash.dependencies.Output(
+        'graph_prod_cons', 'figure')],
     [dash.dependencies.Input('filter-canton_graph', 'value'), dash.dependencies.Input('date-picker-range', 'start_date'),
      dash.dependencies.Input('date-picker-range', 'end_date')]
 )
 def update_figures(selected_cantons, start_date, end_date):
+    
     # Filter the data by the selected cantons
     if selected_cantons == "all" or selected_cantons == None:
 
         # Map + Installed power
         map = fig_ch
-        fig_installed_power = px.area(df_all_cantons, x='BeginningOfOperation', y='CumulativePower',
-                                      title='Total Installed production', color='MainCategory', line_group='MainCategory')
+        fig_installed_power = px.area(df_installed_CH, x='BeginningOfOperation', y='CumulativePower', title='Total Installed production', color='MainCategory', line_group='MainCategory')
 
         # Prod + Cons
-        filtered_data = df_1hour  # Update the figure to display the selected data
-        fig_production = px.area(
-            df_1hour, x="Date", y="Production", color='Canton')
-        fig_consumption = px.area(
-            df_1hour, x="Date", y="Consumption", color='Canton')
+        filtered_data = df_pc[(df_pc['Date'] >= start_date) &
+                                 (df_pc['Date'] <= end_date)]
+        fig_prod_cons = px.line(filtered_data, x='Date', y=['Production', 'Consumption'], title='Total Production and Consumption')
 
+        
     elif (selected_cantons not in df_plants["Canton"].unique() and selected_cantons in df_1hour['Canton'].unique()):
         map = fig_ch
-        fig_installed_power = px.area(df_all_cantons, x='BeginningOfOperation', y='CumulativePower',
+        fig_installed_power = px.area(df_installed_CH, x='BeginningOfOperation', y='CumulativePower',
                                       title='Total Installed production', color='MainCategory', line_group='MainCategory')
-        filtered_data = df_1hour[(df_1hour['Canton'] == selected_cantons) &
-                                 (df_1hour['Date'] >= start_date) &
-                                 (df_1hour['Date'] <= end_date)]
-        fig_production = px.area(
-            filtered_data, x="Date", y="Production", title="Production " + selected_cantons)
-        fig_consumption = px.area(
-            filtered_data, x="Date", y="Consumption", title="Consumption " + selected_cantons)
+        
+        filtered_data = df_pc[(df_pc['Canton'] == selected_cantons) &
+                                 (df_pc['Date'] >= start_date) &
+                                 (df_pc['Date'] <= end_date)]
+        fig_prod_cons = px.line(filtered_data, x='Date', y=['Production', 'Consumption'], title='Production and Consumption ' + selected_cantons)
     else:
         # Map + Intalled power
         filtered_data_map = df_plants.loc[df_plants['Canton']
@@ -252,26 +257,45 @@ def update_figures(selected_cantons, start_date, end_date):
         # Update the figure to display the selected data
         fig_installed_power = px.area(df_canton_final[selected_cantons], x='BeginningOfOperation', y='CumulativePower',
                                       title='Installed production ' + selected_cantons, color='MainCategory', line_group='MainCategory')
-        # Prod + cons
-        filtered_data = df_1hour[(df_1hour['Canton'] == selected_cantons) &
-                                 (df_1hour['Date'] >= start_date) &
-                                 (df_1hour['Date'] <= end_date)]
-
+    
         map = px.scatter_mapbox(
             filtered_data_map, lat="lat", lon="lon", hover_name="Municipality", zoom=7, color="MainCategory")
         map.update_layout(mapbox_style="carto-positron",
                           mapbox_center={
                               "lat": 46.8182, "lon": 8.2275},
                           mapbox_zoom=6)
-
-        fig_production = px.area(
-            filtered_data, x="Date", y="Production", title="Production " + selected_cantons)
-        fig_consumption = px.area(
-            filtered_data, x="Date", y="Consumption", title="Consumption " + selected_cantons)
+        
+        filtered_data = df_pc[(df_pc['Canton'] == selected_cantons) &
+                                 (df_pc['Date'] >= start_date) &
+                                 (df_pc['Date'] <= end_date)]
+        fig_prod_cons = px.line(filtered_data, x='Date', y=['Production', 'Consumption'], title='Production and Consumption ' + selected_cantons)
+    
 
     # Return the updated figures
-    return fig_installed_power, map, fig_production, fig_consumption
+    return fig_installed_power, map , fig_prod_cons
 
+@app.callback(
+    dash.dependencies.Output('graph-container', 'children'),
+    dash.dependencies.Input('graph-dropdown', 'value')
+)
+def update_droptown_graph(selected_graph):
+    # Sélectionnez le graphique correspondant à la valeur sélectionnée dans le menu déroulant
+    if selected_graph == 'graph_wind':
+        return dcc.Graph(id='graph_wind', figure=fig_wind, style={'display': 'block'})
+    elif selected_graph == 'graph_thermal':
+        return dcc.Graph(id='graph_thermal', figure=fig_thermal)
+    elif selected_graph == 'graph_storage':
+        return dcc.Graph(id='graph_storage', figure=fig_storage)
+    elif selected_graph == 'graph_photovoltaic':
+        return dcc.Graph(id='graph_photovoltaic', figure=fig_photovoltaic)
+    elif selected_graph == 'graph_nuclear':
+        return dcc.Graph(id='graph_nuclear', figure=fig_nuclear)
+    elif selected_graph == 'graph_flow':
+        return dcc.Graph(id='graph_flow', figure=fig_flow)
+    elif selected_graph == 'graph_full':
+        return dcc.Graph(id='graph_full', figure=fig_full)
+    else:
+        return None
 
 # Run the app
 if __name__ == '__main__':
