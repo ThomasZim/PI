@@ -201,7 +201,14 @@ app.layout = html.Div([
     ])
 
 ])
-
+def update_group_canton_graph(cantons,start_date,end_date):
+    filter_canton = df_pc[(df_pc['Canton'] == canton) &
+                          (df_pc['Date'] >= start_date) &
+                          (df_pc['Date'] <= end_date)]
+    fig_prod_cons = px.line(filter_canton, x='Date', y=[
+                                    'Production', 'Consumption'], title='Production and Consumption ' +canton)
+    fig_prod_cons.update_layout(yaxis=dict(title='kW'))
+    return fig_prod_cons
 # Mettre à jour les figures
 @app.callback(
     [dash.dependencies.Output('graph_ch', 'figure'), dash.dependencies.Output(
@@ -247,60 +254,25 @@ def update_figures(selected_cantons, start_date, end_date, n_clicks):
                           mapbox_zoom=6)
         if selected_cantons == "GE" or selected_cantons == "VD":
             group_canton_name = "GE/VD"
-            filter_canton = df_pc[(df_pc['Canton'] == group_canton_name) &
-                          (df_pc['Date'] >= start_date) &
-                          (df_pc['Date'] <= end_date)]
-            fig_prod_cons = px.line(filter_canton, x='Date', y=[
-                                    'Production', 'Consumption'], title='Production and Consumption ' +group_canton_name)
-            fig_prod_cons.update_layout(yaxis=dict(title='kW'))
+            update_group_canton_graph(group_canton_name,start_date,end_date)
         elif selected_cantons == "BL" or selected_cantons == "BS":
             group_canton_name = "BL/BS"
-            filter_canton = df_pc[(df_pc['Canton'] == group_canton_name) &
-                          (df_pc['Date'] >= start_date) &
-                          (df_pc['Date'] <= end_date)]
-            fig_prod_cons = px.line(filter_canton, x='Date', y=[
-                                    'Production', 'Consumption'], title='Production and Consumption ' + group_canton_name)
-            fig_prod_cons.update_layout(yaxis=dict(title='kW'))
+            update_group_canton_graph(group_canton_name,start_date,end_date)
         elif selected_cantons == "AI" or selected_cantons == "AR":
             group_canton_name = "AI/AR"
-            filter_canton = df_pc[(df_pc['Canton'] == group_canton_name) &
-                          (df_pc['Date'] >= start_date) &
-                          (df_pc['Date'] <= end_date)]
-            fig_prod_cons = px.line(filter_canton, x='Date', y=[
-                                    'Production', 'Consumption'], title='Production and Consumption ' + group_canton_name)
-            fig_prod_cons.update_layout(yaxis=dict(title='kW'))
+            update_group_canton_graph(group_canton_name,start_date,end_date)
         elif selected_cantons == "SH" or selected_cantons == "ZH":
             group_canton_name = "SH/ZH"
-            filter_canton = df_pc[(df_pc['Canton'] == group_canton_name) &
-                          (df_pc['Date'] >= start_date) &
-                          (df_pc['Date'] <= end_date)]
-            fig_prod_cons = px.line(filter_canton, x='Date', y=[
-                                    'Production', 'Consumption'], title='Production and Consumption ' + group_canton_name)
-            fig_prod_cons.update_layout(yaxis=dict(title='kW'))
+            update_group_canton_graph(group_canton_name,start_date,end_date)
         elif selected_cantons == "SZ" or selected_cantons == "ZG":
             group_canton_name = "SZ/ZG"
-            filter_canton = df_pc[(df_pc['Canton'] == group_canton_name) &
-                          (df_pc['Date'] >= start_date) &
-                          (df_pc['Date'] <= end_date)]
-            fig_prod_cons = px.line(filter_canton, x='Date', y=[
-                                    'Production', 'Consumption'], title='Production and Consumption '+group_canton_name)
-            fig_prod_cons.update_layout(yaxis=dict(title='kW'))
+            update_group_canton_graph(group_canton_name,start_date,end_date)
         elif selected_cantons == "BE" or selected_cantons == "JU":
             group_canton_name = "BE/JU"
-            filter_canton = df_pc[(df_pc['Canton'] == group_canton_name) &
-                          (df_pc['Date'] >= start_date) &
-                          (df_pc['Date'] <= end_date)]
-            fig_prod_cons = px.line(filter_canton, x='Date', y=[
-                                    'Production', 'Consumption'], title='Production and Consumption '+group_canton_name)
-            fig_prod_cons.update_layout(yaxis=dict(title='kW'))
+            update_group_canton_graph(group_canton_name,start_date,end_date)
         elif selected_cantons == "OW" or selected_cantons == "NW" or selected_cantons == "UR":
             group_canton_name = "OW/NW/UR"
-            filter_canton = df_pc[(df_pc['Canton'] == group_canton_name) &
-                          (df_pc['Date'] >= start_date) &
-                          (df_pc['Date'] <= end_date)]
-            fig_prod_cons = px.line(filter_canton, x='Date', y=[
-                                    'Production', 'Consumption'], title='Production and Consumption '+group_canton_name)
-            fig_prod_cons.update_layout(yaxis=dict(title='kW'))
+            update_group_canton_graph(group_canton_name,start_date,end_date)
         else :
             group_canton_name = selected_cantons
             filtered_data = filter_canton
