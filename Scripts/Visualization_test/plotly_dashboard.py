@@ -11,9 +11,13 @@ import plotly.graph_objs as go
 df = pd.read_csv('../../Data/ogd104_stromproduktion_swissgrid.csv', sep=',')
 
 # Open EletricityProductionPlant dataset
-df_plants = pd.read_csv('../../Data/ElectricityProductionPlant.csv', sep=',')
+df_plants = pd.read_csv('../../Data/ProductionPlantFix.csv', sep=',')
 df_plants['MainCategory'] = df_plants['MainCategory'].replace(['maincat_1', 'maincat_2', 'maincat_3', 'maincat_4'], [
                                                               'Energie hydraulique', 'Autres énergies renouvelables', 'Energie nucléaire', 'Energie fossile'])
+
+# Create a color dictionary for the different types of energy
+color_dict = {'Energie hydraulique': 'rgb(0, 0, 255)', 'Autres énergies renouvelables': 'rgb(0, 255, 0)',
+                'Energie nucléaire': 'rgb(255, 0, 0)', 'Energie fossile': 'rgb(0, 0, 0)'}
 
 df_1hour = pd.read_csv('../../Data/1hour_concat.csv', sep=',')
 # Convertir les dates de type string en type datetime
@@ -37,14 +41,11 @@ df_installed_CH = df_installed_cantons[df_installed_cantons['Canton'] == 'CH']
 df_all_cantons = pd.read_csv('../../Data/all_cantons_installed_production.csv')
 df_all_cantons['MainCategory'] = df_all_cantons['MainCategory'].replace(['maincat_1', 'maincat_2', 'maincat_3', 'maincat_4'], [
                                                                         'Energie hydraulique', 'Autres énergies renouvelables', 'Energie nucléaire', 'Energie fossile'])
+df_installed_CH['MainCategory'] = df_installed_CH['MainCategory'].replace(['maincat_1', 'maincat_2', 'maincat_3', 'maincat_4'], [
+                                                                        'Energie hydraulique', 'Autres énergies renouvelables', 'Energie nucléaire', 'Energie fossile'])
 df_canton_final = {}
 for canton in df_plants['Canton'].unique():
     df_canton_final[canton] = df_all_cantons[df_all_cantons['Canton'] == canton]
-# Remove all the rows that have a NaN value
-df_plants = df_plants.dropna()
-
-# Reindex the dataframe
-df_plants = df_plants.reset_index()
 
 # Open cords_WGS84.csv
 df_cords_WGS84 = pd.read_csv('../../Data/cords_WGS84.csv', sep=',')
@@ -54,16 +55,17 @@ cord_column_names = df_cords_WGS84.columns
 plants_column_names = df_plants.columns
 
 # Add the coordinates to the original dataframe ignoring the index
-df_plants = pd.concat([df_plants, df_cords_WGS84], axis=1, ignore_index=True)
+#df_plants = pd.concat([df_plants, df_cords_WGS84], axis=1, ignore_index=True)
 
 # Rename the columns of the new dataframe
-df_plants.columns = plants_column_names.append(cord_column_names)
+#df_plants.columns = plants_column_names.append(cord_column_names)
 
 fig_ch = px.scatter_mapbox(
-    df_plants, lat="lat", lon="lon", hover_name="Municipality", zoom=7)
+    df_plants, lat="lat", lon="lon", hover_name="Municipality", hover_data="TotalPower", zoom=7, color='MainCategory', color_discrete_map=color_dict)
 fig_ch.update_layout(mapbox_style="carto-positron",
                      mapbox_center={"lat": 46.8182, "lon": 8.2275},
-                     mapbox_zoom=6)
+                     mapbox_zoom=6,
+                     )
 
 # Create a new dataframe for every different type of energy
 df_wind = df[df['Energietraeger'] == 'Wind']
@@ -140,7 +142,7 @@ fig_full.update_yaxes(title_text='Production (GWh)')
 
 # Create the initial figure to display the selected data
 fig_selected_data = px.area(df_canton_final["AG"], x='BeginningOfOperation', y='CumulativePower',
-                            title='Installed production', color='MainCategory', line_group='MainCategory')
+                            title='Installed production', color='MainCategory', line_group='MainCategory', color_discrete_map=color_dict)
 
 fig_production = px.area(df_1hour, x="Date", y="Production", color='Canton')
 fig_consumption = px.area(df_1hour, x="Date", y="Consumption", color='Canton')
@@ -223,7 +225,7 @@ def update_figures(selected_cantons, start_date, end_date, n_clicks):
         # Map + Installed power
         map = fig_ch
         fig_installed_power = px.area(df_installed_CH, x='BeginningOfOperation', y='CumulativePower',
-                                      title='Total Installed production', color='MainCategory', line_group='MainCategory')
+                                      title='Total Installed production', color='MainCategory', line_group='MainCategory', color_discrete_map=color_dict)
 
         # Prod + Cons
         filtered_data = filter_all
@@ -233,7 +235,7 @@ def update_figures(selected_cantons, start_date, end_date, n_clicks):
     elif (selected_cantons not in df_plants["Canton"].unique() and selected_cantons in df_1hour['Canton'].unique()):
         map = fig_ch
         fig_installed_power = px.area(df_installed_CH, x='BeginningOfOperation', y='CumulativePower',
-                                      title='Total Installed production', color='MainCategory', line_group='MainCategory')
+                                      title='Total Installed production', color='MainCategory', line_group='MainCategory',color_discrete_map=color_dict)
 
         filtered_data = filter_canton
         fig_prod_cons = px.line(filtered_data, x='Date', y=[
@@ -244,10 +246,10 @@ def update_figures(selected_cantons, start_date, end_date, n_clicks):
                                           == selected_cantons]
         # Update the figure to display the selected data
         fig_installed_power = px.area(df_canton_final[selected_cantons], x='BeginningOfOperation', y='CumulativePower',
-                                      title='Installed production ' + selected_cantons, color='MainCategory', line_group='MainCategory')
+                                      title='Installed production ' + selected_cantons, color='MainCategory', line_group='MainCategory',color_discrete_map=color_dict)
 
         map = px.scatter_mapbox(
-            filtered_data_map, lat="lat", lon="lon", hover_name="Municipality", zoom=7, color="MainCategory")
+            filtered_data_map, lat="lat", lon="lon", hover_name="Municipality", hover_data="TotalPower", zoom=7, color="MainCategory", color_discrete_map=color_dict)
         map.update_layout(mapbox_style="carto-positron",
                           mapbox_center={
                               "lat": 46.8182, "lon": 8.2275},
