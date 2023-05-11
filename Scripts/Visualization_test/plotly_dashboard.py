@@ -224,11 +224,12 @@ def update_figures(selected_cantons, start_date, end_date, n_clicks):
         map = fig_ch
         fig_installed_power = px.area(df_installed_CH, x='BeginningOfOperation', y='CumulativePower',
                                       title='Total Installed production', color='MainCategory', line_group='MainCategory', color_discrete_map=color_dict)
-
+        fig_installed_power.update_layout(yaxis=dict(title='kW'))
         # Prod + Cons
         filtered_data = filter_all
         fig_prod_cons = px.line(filtered_data, x='Date', y=[
                                 'Production', 'Consumption'], title='Total Production and Consumption')
+        fig_prod_cons.update_layout(yaxis=dict(title='kW'))
 
     else:
         # Map + Intalled power
@@ -237,7 +238,7 @@ def update_figures(selected_cantons, start_date, end_date, n_clicks):
         # Update the figure to display the selected data
         fig_installed_power = px.area(df_canton_final[selected_cantons], x='BeginningOfOperation', y='CumulativePower',
                                       title='Installed production ' + selected_cantons, color='MainCategory', line_group='MainCategory',color_discrete_map=color_dict)
-
+        fig_installed_power.update_layout(yaxis=dict(title='kW'))
         map = px.scatter_mapbox(
             filtered_data_map, lat="lat", lon="lon", hover_name="Municipality", hover_data="TotalPower", zoom=7, color="MainCategory", color_discrete_map=color_dict)
         map.update_layout(mapbox_style="carto-positron",
@@ -251,6 +252,7 @@ def update_figures(selected_cantons, start_date, end_date, n_clicks):
                           (df_pc['Date'] <= end_date)]
             fig_prod_cons = px.line(filter_canton, x='Date', y=[
                                     'Production', 'Consumption'], title='Production and Consumption ' +group_canton_name)
+            fig_prod_cons.update_layout(yaxis=dict(title='kW'))
         elif selected_cantons == "BL" or selected_cantons == "BS":
             group_canton_name = "BL/BS"
             filter_canton = df_pc[(df_pc['Canton'] == group_canton_name) &
@@ -258,6 +260,7 @@ def update_figures(selected_cantons, start_date, end_date, n_clicks):
                           (df_pc['Date'] <= end_date)]
             fig_prod_cons = px.line(filter_canton, x='Date', y=[
                                     'Production', 'Consumption'], title='Production and Consumption ' + group_canton_name)
+            fig_prod_cons.update_layout(yaxis=dict(title='kW'))
         elif selected_cantons == "AI" or selected_cantons == "AR":
             group_canton_name = "AI/AR"
             filter_canton = df_pc[(df_pc['Canton'] == group_canton_name) &
@@ -265,6 +268,7 @@ def update_figures(selected_cantons, start_date, end_date, n_clicks):
                           (df_pc['Date'] <= end_date)]
             fig_prod_cons = px.line(filter_canton, x='Date', y=[
                                     'Production', 'Consumption'], title='Production and Consumption ' + group_canton_name)
+            fig_prod_cons.update_layout(yaxis=dict(title='kW'))
         elif selected_cantons == "SH" or selected_cantons == "ZH":
             group_canton_name = "SH/ZH"
             filter_canton = df_pc[(df_pc['Canton'] == group_canton_name) &
@@ -272,6 +276,7 @@ def update_figures(selected_cantons, start_date, end_date, n_clicks):
                           (df_pc['Date'] <= end_date)]
             fig_prod_cons = px.line(filter_canton, x='Date', y=[
                                     'Production', 'Consumption'], title='Production and Consumption ' + group_canton_name)
+            fig_prod_cons.update_layout(yaxis=dict(title='kW'))
         elif selected_cantons == "SZ" or selected_cantons == "ZG":
             group_canton_name = "SZ/ZG"
             filter_canton = df_pc[(df_pc['Canton'] == group_canton_name) &
@@ -279,6 +284,7 @@ def update_figures(selected_cantons, start_date, end_date, n_clicks):
                           (df_pc['Date'] <= end_date)]
             fig_prod_cons = px.line(filter_canton, x='Date', y=[
                                     'Production', 'Consumption'], title='Production and Consumption '+group_canton_name)
+            fig_prod_cons.update_layout(yaxis=dict(title='kW'))
         elif selected_cantons == "BE" or selected_cantons == "JU":
             group_canton_name = "BE/JU"
             filter_canton = df_pc[(df_pc['Canton'] == group_canton_name) &
@@ -286,6 +292,7 @@ def update_figures(selected_cantons, start_date, end_date, n_clicks):
                           (df_pc['Date'] <= end_date)]
             fig_prod_cons = px.line(filter_canton, x='Date', y=[
                                     'Production', 'Consumption'], title='Production and Consumption '+group_canton_name)
+            fig_prod_cons.update_layout(yaxis=dict(title='kW'))
         elif selected_cantons == "OW" or selected_cantons == "NW" or selected_cantons == "UR":
             group_canton_name = "OW/NW/UR"
             filter_canton = df_pc[(df_pc['Canton'] == group_canton_name) &
@@ -293,11 +300,13 @@ def update_figures(selected_cantons, start_date, end_date, n_clicks):
                           (df_pc['Date'] <= end_date)]
             fig_prod_cons = px.line(filter_canton, x='Date', y=[
                                     'Production', 'Consumption'], title='Production and Consumption '+group_canton_name)
+            fig_prod_cons.update_layout(yaxis=dict(title='kW'))
         else :
             group_canton_name = selected_cantons
             filtered_data = filter_canton
             fig_prod_cons = px.line(filtered_data, x='Date', y=[
                                 'Production', 'Consumption'], title='Production and Consumption ' + selected_cantons)
+            fig_prod_cons.update_layout(yaxis=dict(title='kW'))
     # Vérifier si le bouton "Toggle Prod-Cons Trace" a été cliqué
     if n_clicks % 2 == 1 and selected_cantons != "all":
         # Filtrer les données en fonction du canton et de la date sélectionnés
@@ -309,8 +318,7 @@ def update_figures(selected_cantons, start_date, end_date, n_clicks):
         # Créer la figure avec la ligne de somme
         fig_prod_cons = px.line(filtered_data, x='Date', y=[
                                 'Production', 'Consumption', 'ProdConsSum'], title='Production and Consumption ' + group_canton_name)
-
-        # Configurer les propriétés de la ligne de somme
+        fig_prod_cons.update_layout(yaxis=dict(title='kW'))
         fig_prod_cons.update_traces(
             line=dict(dash='dash', width=2.5), selector=dict(name='ProdConsSum'))
     elif n_clicks % 2 == 1 and selected_cantons == "all":
@@ -319,6 +327,7 @@ def update_figures(selected_cantons, start_date, end_date, n_clicks):
             filtered_data['Consumption']
         fig_prod_cons = px.line(filtered_data, x='Date', y=[
                                 'Production', 'Consumption', 'ProdConsSum'], title='Production and Consumption Total')
+        fig_prod_cons.update_layout(yaxis=dict(title='kW'))
     else:
         fig_prod_cons = fig_prod_cons
 
