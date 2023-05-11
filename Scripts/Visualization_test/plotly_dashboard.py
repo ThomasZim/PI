@@ -168,8 +168,7 @@ app.layout = html.Div([
     ),
     dcc.Dropdown(
         id="filter-canton_graph",
-        options=[{'label': c, 'value': c} for c in set(df_1hour['Canton'].unique()).union(
-            df_plants['Canton'].unique())] + [{'label': 'ALL', 'value': 'all'}],
+        options=[{'label': c, 'value': c} for c in df_plants['Canton'].unique()] + [{'label': 'ALL', 'value': 'all'}],
 
         multi=False,
         value="AG",
@@ -204,8 +203,6 @@ app.layout = html.Div([
 ])
 
 # Mettre à jour les figures
-
-
 @app.callback(
     [dash.dependencies.Output('graph_ch', 'figure'), dash.dependencies.Output(
         'graph_selected_data', 'figure'), dash.dependencies.Output(
@@ -219,6 +216,7 @@ def update_figures(selected_cantons, start_date, end_date, n_clicks):
     filter_canton = df_pc[(df_pc['Canton'] == selected_cantons) &
                           (df_pc['Date'] >= start_date) &
                           (df_pc['Date'] <= end_date)]
+    group_canton_name = ""
     # Filter the data by the selected cantons
     if selected_cantons == "all" or selected_cantons == None:
 
@@ -232,14 +230,6 @@ def update_figures(selected_cantons, start_date, end_date, n_clicks):
         fig_prod_cons = px.line(filtered_data, x='Date', y=[
                                 'Production', 'Consumption'], title='Total Production and Consumption')
 
-    elif (selected_cantons not in df_plants["Canton"].unique() and selected_cantons in df_1hour['Canton'].unique()):
-        map = fig_ch
-        fig_installed_power = px.area(df_installed_CH, x='BeginningOfOperation', y='CumulativePower',
-                                      title='Total Installed production', color='MainCategory', line_group='MainCategory',color_discrete_map=color_dict)
-
-        filtered_data = filter_canton
-        fig_prod_cons = px.line(filtered_data, x='Date', y=[
-                                'Production', 'Consumption'], title='Production and Consumption ' + selected_cantons)
     else:
         # Map + Intalled power
         filtered_data_map = df_plants.loc[df_plants['Canton']
@@ -254,9 +244,59 @@ def update_figures(selected_cantons, start_date, end_date, n_clicks):
                           mapbox_center={
                               "lat": 46.8182, "lon": 8.2275},
                           mapbox_zoom=6)
-
-        filtered_data = filter_canton
-        fig_prod_cons = px.line(filtered_data, x='Date', y=[
+        if selected_cantons == "GE" or selected_cantons == "VD":
+            group_canton_name = "GE/VD"
+            filter_canton = df_pc[(df_pc['Canton'] == group_canton_name) &
+                          (df_pc['Date'] >= start_date) &
+                          (df_pc['Date'] <= end_date)]
+            fig_prod_cons = px.line(filter_canton, x='Date', y=[
+                                    'Production', 'Consumption'], title='Production and Consumption ' +group_canton_name)
+        elif selected_cantons == "BL" or selected_cantons == "BS":
+            group_canton_name = "BL/BS"
+            filter_canton = df_pc[(df_pc['Canton'] == group_canton_name) &
+                          (df_pc['Date'] >= start_date) &
+                          (df_pc['Date'] <= end_date)]
+            fig_prod_cons = px.line(filter_canton, x='Date', y=[
+                                    'Production', 'Consumption'], title='Production and Consumption ' + group_canton_name)
+        elif selected_cantons == "AI" or selected_cantons == "AR":
+            group_canton_name = "AI/AR"
+            filter_canton = df_pc[(df_pc['Canton'] == group_canton_name) &
+                          (df_pc['Date'] >= start_date) &
+                          (df_pc['Date'] <= end_date)]
+            fig_prod_cons = px.line(filter_canton, x='Date', y=[
+                                    'Production', 'Consumption'], title='Production and Consumption ' + group_canton_name)
+        elif selected_cantons == "SH" or selected_cantons == "ZH":
+            group_canton_name = "SH/ZH"
+            filter_canton = df_pc[(df_pc['Canton'] == group_canton_name) &
+                          (df_pc['Date'] >= start_date) &
+                          (df_pc['Date'] <= end_date)]
+            fig_prod_cons = px.line(filter_canton, x='Date', y=[
+                                    'Production', 'Consumption'], title='Production and Consumption ' + group_canton_name)
+        elif selected_cantons == "SZ" or selected_cantons == "ZG":
+            group_canton_name = "SZ/ZG"
+            filter_canton = df_pc[(df_pc['Canton'] == group_canton_name) &
+                          (df_pc['Date'] >= start_date) &
+                          (df_pc['Date'] <= end_date)]
+            fig_prod_cons = px.line(filter_canton, x='Date', y=[
+                                    'Production', 'Consumption'], title='Production and Consumption '+group_canton_name)
+        elif selected_cantons == "BE" or selected_cantons == "JU":
+            group_canton_name = "BE/JU"
+            filter_canton = df_pc[(df_pc['Canton'] == group_canton_name) &
+                          (df_pc['Date'] >= start_date) &
+                          (df_pc['Date'] <= end_date)]
+            fig_prod_cons = px.line(filter_canton, x='Date', y=[
+                                    'Production', 'Consumption'], title='Production and Consumption '+group_canton_name)
+        elif selected_cantons == "OW" or selected_cantons == "NW" or selected_cantons == "UR":
+            group_canton_name = "OW/NW/UR"
+            filter_canton = df_pc[(df_pc['Canton'] == group_canton_name) &
+                          (df_pc['Date'] >= start_date) &
+                          (df_pc['Date'] <= end_date)]
+            fig_prod_cons = px.line(filter_canton, x='Date', y=[
+                                    'Production', 'Consumption'], title='Production and Consumption '+group_canton_name)
+        else :
+            group_canton_name = selected_cantons
+            filtered_data = filter_canton
+            fig_prod_cons = px.line(filtered_data, x='Date', y=[
                                 'Production', 'Consumption'], title='Production and Consumption ' + selected_cantons)
     # Vérifier si le bouton "Toggle Prod-Cons Trace" a été cliqué
     if n_clicks % 2 == 1 and selected_cantons != "all":
@@ -268,7 +308,7 @@ def update_figures(selected_cantons, start_date, end_date, n_clicks):
 
         # Créer la figure avec la ligne de somme
         fig_prod_cons = px.line(filtered_data, x='Date', y=[
-                                'Production', 'Consumption', 'ProdConsSum'], title='Production and Consumption ' + selected_cantons)
+                                'Production', 'Consumption', 'ProdConsSum'], title='Production and Consumption ' + group_canton_name)
 
         # Configurer les propriétés de la ligne de somme
         fig_prod_cons.update_traces(
@@ -278,7 +318,7 @@ def update_figures(selected_cantons, start_date, end_date, n_clicks):
         filtered_data['ProdConsSum'] = filtered_data['Production'] + \
             filtered_data['Consumption']
         fig_prod_cons = px.line(filtered_data, x='Date', y=[
-                                'Production', 'Consumption', 'ProdConsSum'], title='Production and Consumption ' + selected_cantons)
+                                'Production', 'Consumption', 'ProdConsSum'], title='Production and Consumption Total')
     else:
         fig_prod_cons = fig_prod_cons
 
