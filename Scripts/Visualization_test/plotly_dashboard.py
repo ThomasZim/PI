@@ -181,12 +181,17 @@ app.layout = html.Div([
         value="AG",
         style={'width': '50%'}
     ),
+    html.Div([
+        dcc.RangeSlider(
+            df_plants["TotalPower"].min(),df_plants["TotalPower"].max(),40000, value = [df_plants["TotalPower"].min(),df_plants["TotalPower"].max()],
+            id = 'power-slider'
+        ),
+    ], style={'width': '100%', 'display': 'inline-block'}),
     # Display the figures side by side
     html.Div([
         # Display the map
         dcc.Graph(id='graph_ch', figure=fig_ch)
     ], style={'width': '50%', 'display': 'inline-block'}),
-
     html.Div([
         # Display the selected data
         dcc.Graph(id='graph_selected_data', figure=fig_selected_data)
@@ -215,9 +220,10 @@ app.layout = html.Div([
         'graph_selected_data', 'figure'), dash.dependencies.Output(
         'graph_prod_cons', 'figure')],
     [dash.dependencies.Input('filter-canton_graph', 'value'), dash.dependencies.Input('date-picker-range', 'start_date'),
-     dash.dependencies.Input('date-picker-range', 'end_date'), dash.dependencies.Input('toggle-button', 'n_clicks')]
+     dash.dependencies.Input('date-picker-range', 'end_date'), dash.dependencies.Input('toggle-button', 'n_clicks'),dash.dependencies.Input('power-slider', 'value')]
 )
-def update_figures(selected_cantons, start_date, end_date, n_clicks):
+def update_figures(selected_cantons, start_date, end_date, n_clicks,power_range):
+    min_power,max_power = power_range
     filter_all = df_pc[(df_pc['Canton'] == 'CH') &
                           (df_pc['Date'] >= start_date) &
                           (df_pc['Date'] <= end_date)]
@@ -229,7 +235,14 @@ def update_figures(selected_cantons, start_date, end_date, n_clicks):
     if selected_cantons == "all" or selected_cantons == None:
 
         # Map + Installed power
-        map = fig_ch
+        filtered_data_map =  df_plants[(df_plants['TotalPower'] >= min_power) &
+                                  (df_plants['TotalPower'] <= max_power)]
+        map = px.scatter_mapbox(
+            filtered_data_map, lat="lat", lon="lon", hover_name="Municipality", hover_data="TotalPower", zoom=7, color="MainCategory", color_discrete_map=color_dict)
+        map.update_layout(mapbox_style="carto-positron",
+                          mapbox_center={
+                              "lat": 46.8182, "lon": 8.2275},
+                          mapbox_zoom=6)
         fig_installed_power = px.area(df_installed_CH, x='BeginningOfOperation', y='CumulativePower',
                                       title='Total Installed production', color='MainCategory', line_group='MainCategory', color_discrete_map=color_dict)
         fig_installed_power.update_layout(yaxis=dict(title='kW'))
@@ -241,8 +254,9 @@ def update_figures(selected_cantons, start_date, end_date, n_clicks):
 
     else:
         # Map + Intalled power
-        filtered_data_map = df_plants.loc[df_plants['Canton']
-                                          == selected_cantons]
+        filtered_data_map =  df_plants[(df_plants['Canton'] == selected_cantons) &
+                              (df_plants['TotalPower'] >= min_power) &
+                              (df_plants['TotalPower'] <= max_power)]
         # Update the figure to display the selected data
         fig_installed_power = px.area(df_canton_final[selected_cantons], x='BeginningOfOperation', y='CumulativePower',
                                       title='Installed production ' + selected_cantons, color='MainCategory', line_group='MainCategory',color_discrete_map=color_dict)
@@ -364,4 +378,4 @@ def update_droptown_graph(selected_graph):
 
 # Run the app
 if __name__ == '__main__':
-    app.run_server(host='0.0.0.0')
+    app.run_server(host='0.0.0.0',debug=True)
