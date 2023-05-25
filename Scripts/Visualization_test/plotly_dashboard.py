@@ -17,7 +17,7 @@ df_plants['MainCategory'] = df_plants['MainCategory'].replace(['maincat_1', 'mai
 
 # Create a color dictionary for the different types of energy
 color_dict = {'Energie hydraulique': 'rgb(0, 0, 255)', 'Autres énergies renouvelables': 'rgb(0, 255, 0)',
-                'Energie nucléaire': 'rgb(255, 0, 0)', 'Energie fossile': 'rgb(0, 0, 0)'}
+              'Energie nucléaire': 'rgb(255, 0, 0)', 'Energie fossile': 'rgb(0, 0, 0)'}
 
 df_1hour = pd.read_csv('../../Data/1hour_concat.csv', sep=',')
 # Convertir les dates de type string en type datetime
@@ -35,7 +35,8 @@ df_pc = df_pc[df_pc.Consumption != 0]
 # reindex the dataframe
 df_pc = df_pc.reset_index(drop=True)
 # Calculer les totaux de production et de consommation par date
-totals = df_pc.groupby('Date').agg({'Production': 'sum', 'Consumption': 'sum'}).reset_index()
+totals = df_pc.groupby('Date').agg(
+    {'Production': 'sum', 'Consumption': 'sum'}).reset_index()
 totals['Canton'] = 'CH'
 totals = totals[['Date', 'Production', 'Consumption', 'Canton']]
 
@@ -49,7 +50,7 @@ df_all_cantons = pd.read_csv('../../Data/all_cantons_installed_production.csv')
 df_all_cantons['MainCategory'] = df_all_cantons['MainCategory'].replace(['maincat_1', 'maincat_2', 'maincat_3', 'maincat_4'], [
                                                                         'Energie hydraulique', 'Autres énergies renouvelables', 'Energie nucléaire', 'Energie fossile'])
 df_installed_CH['MainCategory'] = df_installed_CH['MainCategory'].replace(['maincat_1', 'maincat_2', 'maincat_3', 'maincat_4'], [
-                                                                        'Energie hydraulique', 'Autres énergies renouvelables', 'Energie nucléaire', 'Energie fossile'])
+    'Energie hydraulique', 'Autres énergies renouvelables', 'Energie nucléaire', 'Energie fossile'])
 df_canton_final = {}
 for canton in df_plants['Canton'].unique():
     df_canton_final[canton] = df_all_cantons[df_all_cantons['Canton'] == canton]
@@ -62,10 +63,10 @@ cord_column_names = df_cords_WGS84.columns
 plants_column_names = df_plants.columns
 
 # Add the coordinates to the original dataframe ignoring the index
-#df_plants = pd.concat([df_plants, df_cords_WGS84], axis=1, ignore_index=True)
+# df_plants = pd.concat([df_plants, df_cords_WGS84], axis=1, ignore_index=True)
 
 # Rename the columns of the new dataframe
-#df_plants.columns = plants_column_names.append(cord_column_names)
+# df_plants.columns = plants_column_names.append(cord_column_names)
 
 fig_ch = px.scatter_mapbox(
     df_plants, lat="lat", lon="lon", hover_name="Municipality", hover_data="TotalPower", zoom=7, color='MainCategory', color_discrete_map=color_dict)
@@ -175,7 +176,8 @@ app.layout = html.Div([
     ),
     dcc.Dropdown(
         id="filter-canton_graph",
-        options=[{'label': c, 'value': c} for c in df_plants['Canton'].unique()] + [{'label': 'ALL', 'value': 'all'}],
+        options=[{'label': c, 'value': c} for c in df_plants['Canton'].unique(
+        )] + [{'label': 'ALL', 'value': 'all'}],
 
         multi=False,
         value="AG",
@@ -183,8 +185,8 @@ app.layout = html.Div([
     ),
     html.Div([
         dcc.RangeSlider(
-            df_plants["TotalPower"].min(),df_plants["TotalPower"].max(),40000, value = [df_plants["TotalPower"].min(),df_plants["TotalPower"].max()],
-            id = 'power-slider'
+            df_plants["TotalPower"].min(), df_plants["TotalPower"].max(), 40000, value=[df_plants["TotalPower"].min(), df_plants["TotalPower"].max()],
+            id='power-slider'
         ),
     ], style={'width': '100%', 'display': 'inline-block'}),
     # Display the figures side by side
@@ -200,7 +202,7 @@ app.layout = html.Div([
     html.Div([
         dcc.Graph(id='graph_prod_cons', figure=fig_prod_cons),
         html.Button('Toggle Prod-Cons Trace', id='toggle-button', n_clicks=0)
-    ]),
+    ], style={'margin-bottom' : '50px'}),
     html.Div([
         # Ajoutez le menu déroulant
         dcc.Dropdown(
@@ -214,19 +216,18 @@ app.layout = html.Div([
 
 ])
 
-# Mettre à jour les figures
 @app.callback(
     [dash.dependencies.Output('graph_ch', 'figure'), dash.dependencies.Output(
         'graph_selected_data', 'figure'), dash.dependencies.Output(
         'graph_prod_cons', 'figure')],
     [dash.dependencies.Input('filter-canton_graph', 'value'), dash.dependencies.Input('date-picker-range', 'start_date'),
-     dash.dependencies.Input('date-picker-range', 'end_date'), dash.dependencies.Input('toggle-button', 'n_clicks'),dash.dependencies.Input('power-slider', 'value')]
+     dash.dependencies.Input('date-picker-range', 'end_date'), dash.dependencies.Input('toggle-button', 'n_clicks'), dash.dependencies.Input('power-slider', 'value')]
 )
-def update_figures(selected_cantons, start_date, end_date, n_clicks,power_range):
-    min_power,max_power = power_range
+def update_figures(selected_cantons, start_date, end_date, n_clicks, power_range):
+    min_power, max_power = power_range
     filter_all = df_pc[(df_pc['Canton'] == 'CH') &
-                          (df_pc['Date'] >= start_date) &
-                          (df_pc['Date'] <= end_date)]
+                       (df_pc['Date'] >= start_date) &
+                       (df_pc['Date'] <= end_date)]
     filter_canton = df_pc[(df_pc['Canton'] == selected_cantons) &
                           (df_pc['Date'] >= start_date) &
                           (df_pc['Date'] <= end_date)]
@@ -235,14 +236,9 @@ def update_figures(selected_cantons, start_date, end_date, n_clicks,power_range)
     if selected_cantons == "all" or selected_cantons == None:
 
         # Map + Installed power
-        filtered_data_map =  df_plants[(df_plants['TotalPower'] >= min_power) &
-                                  (df_plants['TotalPower'] <= max_power)]
-        map = px.scatter_mapbox(
-            filtered_data_map, lat="lat", lon="lon", hover_name="Municipality", hover_data="TotalPower", zoom=7, color="MainCategory", color_discrete_map=color_dict)
-        map.update_layout(mapbox_style="carto-positron",
-                          mapbox_center={
-                              "lat": 46.8182, "lon": 8.2275},
-                          mapbox_zoom=6)
+        filtered_data_map = df_plants[(df_plants['TotalPower'] >= min_power) &
+                                      (df_plants['TotalPower'] <= max_power)]
+
         fig_installed_power = px.area(df_installed_CH, x='BeginningOfOperation', y='CumulativePower',
                                       title='Total Installed production', color='MainCategory', line_group='MainCategory', color_discrete_map=color_dict)
         fig_installed_power.update_layout(yaxis=dict(title='kW'))
@@ -254,86 +250,81 @@ def update_figures(selected_cantons, start_date, end_date, n_clicks,power_range)
 
     else:
         # Map + Intalled power
-        filtered_data_map =  df_plants[(df_plants['Canton'] == selected_cantons) &
-                              (df_plants['TotalPower'] >= min_power) &
-                              (df_plants['TotalPower'] <= max_power)]
+        filtered_data_map = df_plants[(df_plants['Canton'] == selected_cantons) &
+                                      (df_plants['TotalPower'] >= min_power) &
+                                      (df_plants['TotalPower'] <= max_power)]
         # Update the figure to display the selected data
         fig_installed_power = px.area(df_canton_final[selected_cantons], x='BeginningOfOperation', y='CumulativePower',
-                                      title='Installed production ' + selected_cantons, color='MainCategory', line_group='MainCategory',color_discrete_map=color_dict)
+                                      title='Installed production ' + selected_cantons, color='MainCategory', line_group='MainCategory', color_discrete_map=color_dict)
         fig_installed_power.update_layout(yaxis=dict(title='kW'))
-        map = px.scatter_mapbox(
-            filtered_data_map, lat="lat", lon="lon", hover_name="Municipality", hover_data="TotalPower", zoom=7, color="MainCategory", color_discrete_map=color_dict)
-        map.update_layout(mapbox_style="carto-positron",
-                          mapbox_center={
-                              "lat": 46.8182, "lon": 8.2275},
-                          mapbox_zoom=6)
+
         if selected_cantons == "GE" or selected_cantons == "VD":
             group_canton_name = "GE/VD"
             filter_canton = df_pc[(df_pc['Canton'] == group_canton_name) &
-                          (df_pc['Date'] >= start_date) &
-                          (df_pc['Date'] <= end_date)]
+                                  (df_pc['Date'] >= start_date) &
+                                  (df_pc['Date'] <= end_date)]
             fig_prod_cons = px.line(filter_canton, x='Date', y=[
-                                    'Production', 'Consumption'], title='Production and Consumption ' +group_canton_name)
+                                    'Production', 'Consumption'], title='Production and Consumption ' + group_canton_name)
             fig_prod_cons.update_layout(yaxis=dict(title='kWh'))
         elif selected_cantons == "BL" or selected_cantons == "BS":
             group_canton_name = "BL/BS"
             filter_canton = df_pc[(df_pc['Canton'] == group_canton_name) &
-                          (df_pc['Date'] >= start_date) &
-                          (df_pc['Date'] <= end_date)]
+                                  (df_pc['Date'] >= start_date) &
+                                  (df_pc['Date'] <= end_date)]
             fig_prod_cons = px.line(filter_canton, x='Date', y=[
                                     'Production', 'Consumption'], title='Production and Consumption ' + group_canton_name)
             fig_prod_cons.update_layout(yaxis=dict(title='kWh'))
         elif selected_cantons == "AI" or selected_cantons == "AR":
             group_canton_name = "AI/AR"
             filter_canton = df_pc[(df_pc['Canton'] == group_canton_name) &
-                          (df_pc['Date'] >= start_date) &
-                          (df_pc['Date'] <= end_date)]
+                                  (df_pc['Date'] >= start_date) &
+                                  (df_pc['Date'] <= end_date)]
             fig_prod_cons = px.line(filter_canton, x='Date', y=[
                                     'Production', 'Consumption'], title='Production and Consumption ' + group_canton_name)
             fig_prod_cons.update_layout(yaxis=dict(title='kWh'))
         elif selected_cantons == "SH" or selected_cantons == "ZH":
             group_canton_name = "SH/ZH"
             filter_canton = df_pc[(df_pc['Canton'] == group_canton_name) &
-                          (df_pc['Date'] >= start_date) &
-                          (df_pc['Date'] <= end_date)]
+                                  (df_pc['Date'] >= start_date) &
+                                  (df_pc['Date'] <= end_date)]
             fig_prod_cons = px.line(filter_canton, x='Date', y=[
                                     'Production', 'Consumption'], title='Production and Consumption ' + group_canton_name)
             fig_prod_cons.update_layout(yaxis=dict(title='kWh'))
         elif selected_cantons == "SZ" or selected_cantons == "ZG":
             group_canton_name = "SZ/ZG"
             filter_canton = df_pc[(df_pc['Canton'] == group_canton_name) &
-                          (df_pc['Date'] >= start_date) &
-                          (df_pc['Date'] <= end_date)]
+                                  (df_pc['Date'] >= start_date) &
+                                  (df_pc['Date'] <= end_date)]
             fig_prod_cons = px.line(filter_canton, x='Date', y=[
                                     'Production', 'Consumption'], title='Production and Consumption '+group_canton_name)
             fig_prod_cons.update_layout(yaxis=dict(title='kWh'))
         elif selected_cantons == "BE" or selected_cantons == "JU":
             group_canton_name = "BE/JU"
             filter_canton = df_pc[(df_pc['Canton'] == group_canton_name) &
-                          (df_pc['Date'] >= start_date) &
-                          (df_pc['Date'] <= end_date)]
+                                  (df_pc['Date'] >= start_date) &
+                                  (df_pc['Date'] <= end_date)]
             fig_prod_cons = px.line(filter_canton, x='Date', y=[
                                     'Production', 'Consumption'], title='Production and Consumption '+group_canton_name)
             fig_prod_cons.update_layout(yaxis=dict(title='kWh'))
         elif selected_cantons == "OW" or selected_cantons == "NW" or selected_cantons == "UR":
             group_canton_name = "OW/NW/UR"
             filter_canton = df_pc[(df_pc['Canton'] == group_canton_name) &
-                          (df_pc['Date'] >= start_date) &
-                          (df_pc['Date'] <= end_date)]
+                                  (df_pc['Date'] >= start_date) &
+                                  (df_pc['Date'] <= end_date)]
             fig_prod_cons = px.line(filter_canton, x='Date', y=[
                                     'Production', 'Consumption'], title='Production and Consumption '+group_canton_name)
             fig_prod_cons.update_layout(yaxis=dict(title='kWh'))
-        else :
+        else:
             group_canton_name = selected_cantons
             filtered_data = filter_canton
             fig_prod_cons = px.line(filtered_data, x='Date', y=[
-                                'Production', 'Consumption'], title='Production and Consumption ' + selected_cantons)
+                'Production', 'Consumption'], title='Production and Consumption ' + selected_cantons)
             fig_prod_cons.update_layout(yaxis=dict(title='kWh'))
     # Vérifier si le bouton "Toggle Prod-Cons Trace" a été cliqué
     if n_clicks % 2 == 1 and selected_cantons != "all":
         # Filtrer les données en fonction du canton et de la date sélectionnés
         filtered_data = filter_canton
-        
+
         # Créer la figure avec la ligne de somme
         fig_prod_cons = px.line(filtered_data, x='Date', y=[
                                 'Production', 'Consumption', 'ProdConsSum'], title='Production and Consumption ' + group_canton_name)
@@ -347,6 +338,12 @@ def update_figures(selected_cantons, start_date, end_date, n_clicks,power_range)
         fig_prod_cons.update_layout(yaxis=dict(title='kWh'))
     else:
         fig_prod_cons = fig_prod_cons
+    map = px.scatter_mapbox(
+        filtered_data_map, lat="lat", lon="lon", hover_name="Municipality", hover_data="TotalPower", zoom=7, color="MainCategory", color_discrete_map=color_dict)
+    map.update_layout(mapbox_style="carto-positron",
+                      mapbox_center={
+                          "lat": 46.8182, "lon": 8.2275},
+                      mapbox_zoom=6)
 
     # Return the updated figures
     return fig_installed_power, map, fig_prod_cons
@@ -378,4 +375,4 @@ def update_droptown_graph(selected_graph):
 
 # Run the app
 if __name__ == '__main__':
-    app.run_server(host='0.0.0.0',debug=True)
+    app.run_server(host='0.0.0.0')
