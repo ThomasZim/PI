@@ -34,6 +34,13 @@ df_pc = df_pc[df_pc.Production != 0]
 df_pc = df_pc[df_pc.Consumption != 0]
 # reindex the dataframe
 df_pc = df_pc.reset_index(drop=True)
+# Calculer les totaux de production et de consommation par date
+totals = df_pc.groupby('Date').agg({'Production': 'sum', 'Consumption': 'sum'}).reset_index()
+totals['Canton'] = 'CH'
+totals = totals[['Date', 'Production', 'Consumption', 'Canton']]
+
+df_pc = pd.concat([df_pc, totals], ignore_index=True)
+df_pc['ProdConsSum'] = df_pc['Production'] + df_pc['Consumption']
 
 df_installed_cantons = pd.read_csv(
     '../../Data/all_cantons_installed_production_with_CH.csv', sep=',')
@@ -211,8 +218,9 @@ app.layout = html.Div([
      dash.dependencies.Input('date-picker-range', 'end_date'), dash.dependencies.Input('toggle-button', 'n_clicks')]
 )
 def update_figures(selected_cantons, start_date, end_date, n_clicks):
-    filter_all = df_pc[(df_pc['Date'] >= start_date) &
-                       (df_pc['Date'] <= end_date)]
+    filter_all = df_pc[(df_pc['Canton'] == 'CH') &
+                          (df_pc['Date'] >= start_date) &
+                          (df_pc['Date'] <= end_date)]
     filter_canton = df_pc[(df_pc['Canton'] == selected_cantons) &
                           (df_pc['Date'] >= start_date) &
                           (df_pc['Date'] <= end_date)]
@@ -311,10 +319,7 @@ def update_figures(selected_cantons, start_date, end_date, n_clicks):
     if n_clicks % 2 == 1 and selected_cantons != "all":
         # Filtrer les données en fonction du canton et de la date sélectionnés
         filtered_data = filter_canton
-        # Ajouter une colonne contenant la somme des productions et des consommations
-        filtered_data['ProdConsSum'] = filtered_data['Production'] + \
-            filtered_data['Consumption']
-
+        
         # Créer la figure avec la ligne de somme
         fig_prod_cons = px.line(filtered_data, x='Date', y=[
                                 'Production', 'Consumption', 'ProdConsSum'], title='Production and Consumption ' + group_canton_name)
@@ -323,8 +328,6 @@ def update_figures(selected_cantons, start_date, end_date, n_clicks):
             line=dict(dash='dash', width=2.5), selector=dict(name='ProdConsSum'))
     elif n_clicks % 2 == 1 and selected_cantons == "all":
         filtered_data = filter_all
-        filtered_data['ProdConsSum'] = filtered_data['Production'] + \
-            filtered_data['Consumption']
         fig_prod_cons = px.line(filtered_data, x='Date', y=[
                                 'Production', 'Consumption', 'ProdConsSum'], title='Production and Consumption Total')
         fig_prod_cons.update_layout(yaxis=dict(title='kWh'))
