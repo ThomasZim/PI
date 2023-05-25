@@ -95,27 +95,27 @@ df_flow = df_flow.sort_values(by=['Datum'])
 fig_wind = px.line(df_wind, x='Datum', y='Produktion_GWh',
                    title='Wind Production in Switzerland')
 fig_wind.update_xaxes(title_text='Date')
-fig_wind.update_yaxes(title_text='Production (GWh)')
+fig_wind.update_yaxes(title_text='Production [GWh/Tag]')
 
 fig_thermal = px.line(df_thermal, x='Datum', y='Produktion_GWh',
                       title='Thermal Production in Switzerland')
 fig_thermal.update_xaxes(title_text='Date')
-fig_thermal.update_yaxes(title_text='Production (GWh)')
+fig_thermal.update_yaxes(title_text='Production (G')
 
 fig_storage = px.line(df_storage, x='Datum', y='Produktion_GWh',
                       title='Storage Production in Switzerland')
 fig_storage.update_xaxes(title_text='Date')
-fig_storage.update_yaxes(title_text='Production (GWh)')
+fig_storage.update_yaxes(title_text='Production [GWh/Tag]')
 
 fig_photovoltaic = px.line(df_photovoltaic, x='Datum', y='Produktion_GWh',
                            title='Photovoltaic Production in Switzerland')
 fig_photovoltaic.update_xaxes(title_text='Date')
-fig_photovoltaic.update_yaxes(title_text='Production (GWh)')
+fig_photovoltaic.update_yaxes(title_text='Production [GWh/Tag]')
 
 fig_nuclear = px.line(df_nuclear, x='Datum', y='Produktion_GWh',
                       title='Nuclear Production in Switzerland')
 fig_nuclear.update_xaxes(title_text='Date')
-fig_nuclear.update_yaxes(title_text='Production (GWh)')
+fig_nuclear.update_yaxes(title_text='Production [GWh/Tag]')
 
 # Créez une liste d'options pour le menu déroulant
 graph_options = [
