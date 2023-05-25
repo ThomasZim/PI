@@ -102,27 +102,27 @@ df_flow = df_flow.sort_values(by=['Datum'])
 fig_wind = px.line(df_wind, x='Datum', y='Produktion_GWh',
                    title='Wind Production in Switzerland')
 fig_wind.update_xaxes(title_text='Date')
-fig_wind.update_yaxes(title_text='Production [GWh/Tag]')
+fig_wind.update_yaxes(title_text='Production [GWh/Day]')
 
 fig_thermal = px.line(df_thermal, x='Datum', y='Produktion_GWh',
                       title='Thermal Production in Switzerland')
 fig_thermal.update_xaxes(title_text='Date')
-fig_thermal.update_yaxes(title_text='Production (G')
+fig_thermal.update_yaxes(title_text='Production [GWh/Day]')
 
 fig_storage = px.line(df_storage, x='Datum', y='Produktion_GWh',
                       title='Storage Production in Switzerland')
 fig_storage.update_xaxes(title_text='Date')
-fig_storage.update_yaxes(title_text='Production [GWh/Tag]')
+fig_storage.update_yaxes(title_text='Production [GWh/Day]')
 
 fig_photovoltaic = px.line(df_photovoltaic, x='Datum', y='Produktion_GWh',
                            title='Photovoltaic Production in Switzerland')
 fig_photovoltaic.update_xaxes(title_text='Date')
-fig_photovoltaic.update_yaxes(title_text='Production [GWh/Tag]')
+fig_photovoltaic.update_yaxes(title_text='Production [GWh/Day]')
 
 fig_nuclear = px.line(df_nuclear, x='Datum', y='Produktion_GWh',
                       title='Nuclear Production in Switzerland')
 fig_nuclear.update_xaxes(title_text='Date')
-fig_nuclear.update_yaxes(title_text='Production [GWh/Tag]')
+fig_nuclear.update_yaxes(title_text='Production [GWh/Day]')
 
 # Créez une liste d'options pour le menu déroulant
 graph_options = [
@@ -138,14 +138,14 @@ graph_options = [
 fig_flow = px.line(df_flow, x='Datum', y='Produktion_GWh',
                    title='Flow Production in Switzerland')
 fig_flow.update_xaxes(title_text='Date')
-fig_flow.update_yaxes(title_text='Production (GWh)')
+fig_flow.update_yaxes(title_text='Production [GWh/Day]')
 
 df_full = pd.concat([df_wind, df_thermal, df_storage,
                     df_photovoltaic, df_nuclear, df_flow])
 fig_full = px.line(df_full, x='Datum', y='Produktion_GWh',
                    color='Energietraeger', title='Energy Production in Switzerland')
 fig_full.update_xaxes(title_text='Date')
-fig_full.update_yaxes(title_text='Production (GWh)')
+fig_full.update_yaxes(title_text='Production [GWh/Day]')
 
 # Create the initial figure to display the selected data
 fig_selected_data = px.area(df_canton_final["AG"], x='BeginningOfOperation', y='CumulativePower',
