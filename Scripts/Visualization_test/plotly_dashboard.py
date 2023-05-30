@@ -185,7 +185,7 @@ app.layout = html.Div([
     ),
     html.Div([
         dcc.RangeSlider(
-            df_plants["TotalPower"].min(), df_plants["TotalPower"].max(), 40000, value=[df_plants["TotalPower"].min(), df_plants["TotalPower"].max()],
+            df_plants["TotalPower"].min(), df_plants["TotalPower"].max(), 1000, value=[df_plants["TotalPower"].min(), df_plants["TotalPower"].max()],
             id='power-slider'
         ),
     ], style={'width': '100%', 'display': 'inline-block'}),
