@@ -6,6 +6,7 @@ import pandas as pd
 import plotly.express as px
 import numpy as np
 import plotly.graph_objs as go
+import datetime
 
 # Open dataset
 df = pd.read_csv('../../Data/ogd104_stromproduktion_swissgrid.csv', sep=',')
@@ -54,6 +55,21 @@ df_installed_CH['MainCategory'] = df_installed_CH['MainCategory'].replace(['main
 df_canton_final = {}
 for canton in df_plants['Canton'].unique():
     df_canton_final[canton] = df_all_cantons[df_all_cantons['Canton'] == canton]
+
+df_prod_yearly = pd.read_csv("../../Data/prod_yearly_PI.csv", sep=';')
+df_cons_yearly = pd.read_csv("../../Data/cons_yearly_PI.csv", sep=';')
+df_prod_yearly["Date"] = pd.to_datetime(df_prod_yearly["Date"], format="%Y-%m-%d")
+df_cons_yearly["Date"] = pd.to_datetime(df_cons_yearly["Date"], format="%Y-%m-%d")
+df_prod_filtered = df_prod_yearly[df_prod_yearly["Date"].dt.year <= 2060]
+df_cons_filtered = df_cons_yearly[df_cons_yearly["Date"].dt.year <= 2060]
+
+
+df_prod_weekly = pd.read_csv("../../Data/prod_PI.csv", sep=';')
+df_cons_weekly = pd.read_csv("../../Data/cons_PI.csv", sep=';')
+
+df_Ch_pred = pd.read_csv("../../Data/CHpred_CH.csv", sep=';')
+df_Ch_pred["Date"] = pd.to_datetime(df_Ch_pred["Date"], format="%Y-%m-%d")
+df_Ch_pred_filtered = df_Ch_pred[df_Ch_pred["Date"].dt.year <= 2060]
 
 # Open cords_WGS84.csv
 df_cords_WGS84 = pd.read_csv('../../Data/cords_WGS84.csv', sep=',')
@@ -158,8 +174,22 @@ fig_consumption = px.area(df_1hour, x="Date", y="Consumption", color='Canton')
 fig_prod_cons = px.line(df_pc, x='Date', y=[
                         'Production', 'Consumption'], title='Production and Consumption')
 
+current_date = datetime.datetime.now().date()
+## Création des figures pour les données annuelles
+fig_yearly = px.line(title="Production and Consumption - Yearly")
+fig_yearly.add_scatter(x=df_prod_yearly["Date"], y=df_prod_yearly["Production"], name="Production Yearly")
+fig_yearly.add_scatter(x=df_cons_yearly["Date"], y=df_cons_yearly["Consumption"], name="Consumption Yearly")
+fig_yearly.add_scatter(x=df_Ch_pred_filtered["Date"], y=df_Ch_pred_filtered["Production"], name="Production CH")
+fig_yearly.add_scatter(x=df_Ch_pred_filtered["Date"], y=df_Ch_pred_filtered["Consumption"], name="Consumption CH")
+fig_yearly.add_vline(x=current_date, line_dash="dash", line_color="red", name="Current Date")
 
-# Create a dataframe with
+# Création des figures pour les données hebdomadaires
+fig_weekly = px.line(title="Production and Consumption - Weekly")
+fig_weekly.add_scatter(x=df_prod_weekly["Date"], y=df_prod_weekly["Production"], name="Production Weekly")
+fig_weekly.add_scatter(x=df_cons_weekly["Date"], y=df_cons_weekly["Consumption"], name="Consumption Weekly")
+# Ajouter un repère à la date actuelle
+fig_weekly.add_vline(x=current_date, line_dash="dash", line_color="red", name="Current Date")
+
 
 # Initialize the app
 app = dash.Dash(__name__)
@@ -203,6 +233,13 @@ app.layout = html.Div([
         dcc.Graph(id='graph_prod_cons', figure=fig_prod_cons),
         html.Button('Toggle Prod-Cons Trace', id='toggle-button', n_clicks=0)
     ], style={'margin-bottom' : '50px'}),
+    html.Div([
+        dcc.Graph(id='graph_pred', figure=fig_weekly),
+    ]),
+    html.Div([
+        dcc.Graph(id='graph_yearly', figure=fig_yearly),
+    ]),
+    
     html.Div([
         # Ajoutez le menu déroulant
         dcc.Dropdown(
